@@ -4,3 +4,4 @@ __pycache__/
 chroma/
 *.txt
 *.pdf
+.DS_Store
