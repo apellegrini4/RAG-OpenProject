@@ -8,8 +8,15 @@ class APIRequest(BaseModel):
     endpoint: str = Field(
         description="The API endpoint to call. CHOOSE ONLY FROM THESE OPTIONS: 'work_packages' (for tasks, bugs, tickets), 'projects' (for project information), 'users' (for users, teams, people)."
     )
+# Sostituisci il campo 'filters' nel tuo script con questo:
+
     filters: dict = Field(
-        description="A key-value dictionary with the filters to apply. Example: {'status': 'open'} or {'search': 'keyword'}. Leave empty {} if there are no obvious filters."
+        description="""A dictionary with the API filters. VERY IMPORTANT RULES FOR OPENPROJECT:
+        - For urgency/importance, use the key 'priority' (e.g., {'priority': 'urgent'}).
+        - For open/closed/active states, use the key 'status' (e.g., {'status': 'active'} or {'status': 'open'}).
+        - For names or text searches, use the key 'search' (e.g., {'search': 'Alba'}).
+        Leave empty {} ONLY if no specific condition is mentioned.
+        """
     )
     explanation: str = Field(
         description="A very brief explanation (1 line) of why you chose this endpoint."
