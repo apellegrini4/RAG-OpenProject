@@ -3,12 +3,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from pydantic import BaseModel, Field
 
-# 1. THE NEW SCHEMA: ENDPOINT + PARAMETERS
 class APIRequest(BaseModel):
     endpoint: str = Field(
         description="The API endpoint to call. CHOOSE ONLY FROM THESE OPTIONS: 'work_packages' (for tasks, bugs, tickets), 'projects' (for project information), 'users' (for users, teams, people)."
     )
-# Sostituisci il campo 'filters' nel tuo script con questo:
 
     filters: dict = Field(
         description="""A dictionary with the API filters. VERY IMPORTANT RULES FOR OPENPROJECT:
