@@ -48,7 +48,7 @@ ai_result = chain.invoke({
 print(f"1. LLM Extracted JSON: {ai_result}")
 
 # B. Python fa la sua parte (Costruzione rigorosa dell'URL)
-base_url = "https://tirocinio-alba.openproject.com/api/v3/projects"
+base_url = "https://tirocinio-alba2.openproject.com/api/v3/projects"
 op_filters = []
 
 # Traduciamo il JSON dell'AI nel formato malato di OpenProject
