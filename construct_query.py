@@ -4,7 +4,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 llm = ChatOllama(model='llama3.2', temperature=0)
 
-template = template = """You are an API query constructor.
+template = """You are an API query constructor.
     Your task is to create a fully valid URL for the OpenProject API.
     The BASE URL of the request is: https://tirocinio-alba2.openproject.com/api/v3/
     
@@ -18,10 +18,29 @@ template = template = """You are an API query constructor.
     EXAMPLE:
     user query -> What are the active projects?
     keyword -> projects
-    filter -> active = true
-    final URL -> https://tirocinio-alba2.openproject.com/api/v3/projects?filters=[{{"active": {{"operator":"=","values": ["true"] }}}}]
+    filter -> active = t
+    final URL -> https://tirocinio-alba2.openproject.com/api/v3/projects?filters=[{{"active": {{"operator":"=","values": ["t"] }}}}]
     
-    Generate ONLY the final url.
+    AVAILABLE FILTERS AND OPERATORS RULES:
+    - "=" : Is / Equal to
+    - "!" : Is not
+    - "*" : Any (Meaning the field is not empty/null)
+    - "!*" : None (Meaning the field is empty/null)
+    - "~" : Contains (For text search, like searching a name)
+
+    ALLOWED FILTER KEYS DICTIONARY:
+    Depending on the macro-section you identified, you can ONLY use the following filter keys:
+
+    If macro-section is 'projects', you can use:
+    - "active" (boolean 't' or 'f'): If the project is currently active.
+    - "public" (boolean 't' or 'f'): If the project is visible to everyone.
+    - "name" (text string): To search for a specific project name (use "~" operator).
+
+    CRITICAL INSTRUCTION: 
+    - DO NOT WRITE ANY PYTHON CODE. 
+    - DO NOT WRITE FUNCTIONS.
+    - DO NOT EXPLAIN YOUR REASONING.
+    - YOU MUST OUTPUT ONLY THE RAW URL STARTING WITH "https://" AND NOTHING ELSE.
     
     User query: {user_query}
 """
@@ -31,10 +50,14 @@ chain = prompt | llm | StrOutputParser()
 
 # 3. TEST
 print("--- TEST 1: LLM DIRECT URL GENERATION ---\n")
-user_query = "Show me the active projects"
+array_query = ["Show me all active projects", "List the public projects", "Find the project named Alpha",
+               "What are the active public projects?", "Search for active projects containing the word migration",
+               "Show me closed projects", "List all projects"]
+#user_query = "Show me the active projects"
 
 try:
-    generated_url = chain.invoke({"user_query": user_query})
-    print(f"Generated URL:\n{generated_url}\n")
+    for i, query in enumerate(array_query):
+        generated_url = chain.invoke({"user_query": query})
+        print(f"Generated URL question numb. {i+1}:\n{generated_url}\n")
 except Exception as e:
     print(f"Errore: {e}")
