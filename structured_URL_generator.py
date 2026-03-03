@@ -8,6 +8,8 @@ from langchain_core.output_parsers import JsonOutputParser
 # 1. IL CONTRATTO DATI (Pydantic / Ollama Structured Output)
 # Definiamo la struttura JSON esatta che l'LLM deve restituire.
 class QueryParams(BaseModel):
+    #aggiunta del chain of thought
+    reasinoning: str = Field(description="think")
     macro_section: str = Field(description="Must be exactly 'projects' or 'work_packages', or 'not_allowed' if out of scope.")
     filters: dict = Field(description="Dictionary of extracted parameters. IMPORTANT: Every value inside this dictionary MUST be a list, even if there is only one element.",
                           examples=[{'priority': ['Low', 'High']}, {'active': ['t']}, {'assignee': ['Alba']}] )
@@ -49,7 +51,7 @@ Actually, ALL values in the filters dictionary MUST be formatted as lists (array
 
 EXAMPLE:
 User: "Find urgent milestones assigned to Alba in the Alpha project"
-Output: {{"macro_section": "work_packages", "filters": {{"type": ["Milestones"], "priority": ["Immediate", "High"], "assignee": ["Alba"], "project": ["Alpha"]}}}}
+Output: {{"reasoning": "The user wants work packages. 'urgent' means priority High and Immediate. 'milestones' is the type. 'Alba' is the assignee. 'Alpha' is the project.", "macro_section": "work_packages", "filters": {{"type": ["Milestones"], "priority": ["Immediate", "High"], "assignee": ["Alba"], "project": ["Alpha"]}}}}
 
 {format_instructions}
 
