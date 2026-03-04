@@ -47,15 +47,12 @@ ai_result = chain.invoke({
 })
 print(f"1. LLM Extracted JSON: {ai_result}")
 
-# B. Python fa la sua parte (Costruzione rigorosa dell'URL)
 base_url = "https://tirocinio-alba2.openproject.com/api/v3/projects"
 op_filters = []
 
-# Traduciamo il JSON dell'AI nel formato malato di OpenProject
 if ai_result.get("is_active"):
     op_filters.append({"active": {"operator": "=", "values": ["true"]}})
 
-# Convertiamo in stringa JSON e facciamo l'URL Encoding (sostituisce gli spazi con %20 ecc.)
 filters_json_string = json.dumps(op_filters)
 encoded_filters = urllib.parse.quote(filters_json_string)
 

@@ -5,8 +5,7 @@ from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
-# 1. IL CONTRATTO DATI (Pydantic / Ollama Structured Output)
-# Definiamo la struttura JSON esatta che l'LLM deve restituire.
+#definizione della struttura JSON che deve restituire l'LLM
 class QueryParams(BaseModel):
     #aggiunta del chain of thought
     reasinoning: str = Field(description="think")
@@ -14,10 +13,11 @@ class QueryParams(BaseModel):
     filters: dict = Field(description="Dictionary of extracted parameters. IMPORTANT: Every value inside this dictionary MUST be a list, even if there is only one element.",
                           examples=[{'priority': ['Low', 'High']}, {'active': ['t']}, {'assignee': ['Alba']}] )
 
-# 2. SETUP MODELLO E PARSER
-llm = ChatOllama(model='llama3.2', temperature=0, format="json")
+#scelta del modello e del parser
+llm = ChatOllama(model='llama3.1', temperature=0, format="json")
 parser = JsonOutputParser(pydantic_object=QueryParams)
 
+#scrittura di un template strutturato che sfrutti anche il Chain of Thought
 template = """You are an API semantic extractor.
 Your ONLY task is to understand the user query and extract the macro-section and the search parameters.
 DO NOT generate URLs. Output ONLY a valid JSON object matching the requested schema.
@@ -61,7 +61,7 @@ User query: {user_query}
 prompt = ChatPromptTemplate.from_template(template)
 chain = prompt | llm | parser
 
-#TEST SET
+#primo test set utilizzato
 test_queries = [
     "Show me all active and public projects.",
     "Search for the project named Data Migration.",
