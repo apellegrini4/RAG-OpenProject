@@ -61,26 +61,39 @@ User query: {user_query}
 prompt = ChatPromptTemplate.from_template(template)
 chain = prompt | llm | parser
 
-#primo test set utilizzato
-test_queries = [
-    "Show me all active and public projects.",
-    "Search for the project named Data Migration.",
-
-    "Find the tasks assigned to Mario Rossi.",
-    "What are the open bugs?",
-
-    "Find the urgent milestones or features in the Alpha project.",
-    "Show me the tasks created by Alba that are 100'%' completed.",
-
-    "Give me the list of all registered users in the system.",
-    "Search for the work package with ID 42."
-]
-
-for i, q in enumerate(test_queries):
-    print(f"query {i+1}: ", {q})
-    try:
-        risultato = chain.invoke({"format_instructions": parser.get_format_instructions(), "user_query": q})
-        print(risultato)
-        print(40*'-')
-    except Exception as e:
-        print('errore: ', e)
+#TEST SECTION
+#first test set
+#test_queries = [
+#    "Show me all active and public projects.",
+#    "Search for the project named Data Migration.",
+#
+#    "Find the tasks assigned to Mario Rossi.",
+#    "What are the open bugs?",
+#
+#    "Find the urgent milestones or features in the Alpha project.",
+#    "Show me the tasks created by Alba that are 100'%' completed.",
+#
+#    "Give me the list of all registered users in the system.",
+#    "Search for the work package with ID 42."
+#]
+#
+##new test set to verify the model ability to understand and adapt
+#blind_test_queries = [
+#    "Show me the closed features in the Beta project that were created by Alba and assigned to Mario.",
+#    
+#    "I need to see the work package number 99.",
+#    
+#    "What is the total financial budget for the Data Migration project?",
+#    
+#    #OR condition, not possible to do it in OpenProject (TO DO: decide if u wanna keep it or not as exemple)
+#    "Find tasks assigned to Alba that are either urgent or 50% completed."
+#]
+#
+#for i, q in enumerate(blind_test_queries):
+#    print(f"query {i+1}: ", {q})
+#    try:
+#        risultato = chain.invoke({"format_instructions": parser.get_format_instructions(), "user_query": q})
+#        print(risultato)
+#        print(40*'-')
+#    except Exception as e:
+#        print('errore: ', e)
