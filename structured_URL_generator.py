@@ -1,5 +1,7 @@
+import os
 import json
 import requests
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
@@ -78,22 +80,104 @@ chain = prompt | llm | parser
 #]
 #
 ##new test set to verify the model ability to understand and adapt
-#blind_test_queries = [
-#    "Show me the closed features in the Beta project that were created by Alba and assigned to Mario.",
-#    
-#    "I need to see the work package number 99.",
-#    
-#    "What is the total financial budget for the Data Migration project?",
-#    
-#    #OR condition, not possible to do it in OpenProject (TO DO: decide if u wanna keep it or not as exemple)
-#    "Find tasks assigned to Alba that are either urgent or 50% completed."
-#]
-#
-#for i, q in enumerate(blind_test_queries):
-#    print(f"query {i+1}: ", {q})
-#    try:
-#        risultato = chain.invoke({"format_instructions": parser.get_format_instructions(), "user_query": q})
-#        print(risultato)
-#        print(40*'-')
-#    except Exception as e:
-#        print('errore: ', e)
+blind_test_queries = [
+    "Show me the closed features in the Beta project that were created by Alba and assigned to Mario.",
+    
+    "I need to see the work package number 99.",
+    
+    "What is the total financial budget for the Data Migration project?",
+    
+    #OR condition, not possible to do it in OpenProject (TO DO: decide if u wanna keep it or not as exemple)
+    "Find tasks assigned to Alba that are either urgent or 50% completed."
+]
+
+risultato = []
+for i, q in enumerate(blind_test_queries):
+    print(f"query {i+1}: ", {q})
+    try:
+        risultato.append(chain.invoke({"format_instructions": parser.get_format_instructions(), "user_query": q}))
+        #print(risultato)
+        #print(40*'-')
+    except Exception as e:
+        print('errore: ', e)
+
+
+load_dotenv()
+api_key = os.getenv('OP_API_KEY')
+op_url = os.getenv('OP_URL')
+API_V3_BASE = op_url + '/api/v3/'
+
+def build_get_ID_request(name):
+    base_url = API_V3_BASE
+
+    #builds the correct path for the get based on the filter name
+    if name == 'priority':
+        base_url += 'priorities'
+
+    elif name == 'author' or name == 'assignee':
+        base_url += 'users'
+
+    elif name == 'status':
+        base_url += 'statuses'
+
+    elif name == 'type':
+        base_url += 'types'
+
+    elif name == 'version':
+        base_url += 'versions'    
+
+    elif name == 'project':
+        base_url += 'projects'  
+
+    else:
+        raise ValueError(f"Errore: Il filtro '{name}' non ha un endpoint associato per gli ID.")
+    return base_url
+
+def create_ID_map(filter_name):
+    #finds the correct URL
+    url = build_get_ID_request(filter_name)
+
+    #makes the request to get the json and creates a dictionary for that filter
+    try:
+        response = requests.get(url, auth=('apikey', api_key))
+        response.raise_for_status() #in case of wrong URL (error 404) --> in the future it can be changed by considering the number of the error, because some users might receive error 402 (?) if they lack of permissions
+
+        #transforms the response into a json to create the dictionary
+        data = response.json()
+
+        #every ID can be found inside a single element, which are under _embedded in the json
+        elements = data.get('_embedded', {}).get('elements', {})
+
+        #creates the dictionary with the name as key and the value as ID
+        ID_dict = {}
+        for el in elements:
+            key = el.get('name')
+            value = el.get('id')
+            ID_dict[key] = value
+
+        return ID_dict
+
+    except Exception as e:
+        print(f'Error while retrieving the filter {filter_name}')
+        return {}
+
+def build_OP_URL(json):
+    #manages the 'not_allowed' case
+    if json['macro_section'] == 'not_allowed':
+        return 'Operation not allowed, query out of domain'
+
+    macro_sect = json['macro_section']
+    #if the macro-section is valid creates the first part of the request
+    base_url = API_V3_BASE
+    base_url += f'{macro_sect}'
+    print(base_url)
+    
+    #we extract the filters
+    filters = json.get('filters', {})
+    print(filters)
+
+    #creates a dictionary only if the filter needs it
+
+    return ...
+
+build_OP_URL(risultato[0])
