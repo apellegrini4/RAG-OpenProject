@@ -130,7 +130,7 @@ def build_get_ID_request(name):
         base_url += 'projects'  
 
     else:
-        raise ValueError(f"Errore: Il filtro '{name}' non ha un endpoint associato per gli ID.")
+        raise ValueError(f"Error, the filter '{name}' does'nt have an endpoint associated to an ID list.")
     return base_url
 
 def create_ID_map(filter_name):
@@ -152,6 +152,7 @@ def create_ID_map(filter_name):
         ID_dict = {}
         for el in elements:
             key = el.get('name')
+            key = key.lower().strip()
             value = el.get('id')
             ID_dict[key] = value
 
@@ -177,7 +178,41 @@ def build_OP_URL(json):
     print(filters)
 
     #creates a dictionary only if the filter needs it
+    f_need_map = ['author', 'assignee', 'priority', 'status', 'type', 'version', 'project']
 
-    return ...
+    op_filters = []
 
-build_OP_URL(risultato[0])
+    for key, val_list in filters.items():
+        mapped_values = []
+        operator = '='
+        op_key = key #the name of the filter to put in the query
+
+        if key in f_need_map:
+            op_key = f'{key}_id' #if the filter is search by ID it's written in this way
+            dict_f = create_ID_map(key) #creates the dictionary only if it's needed
+
+            #every key has a list (it can be null, of 1 element of more but still a list)
+            for v in val_list:
+                clean_v = v.lower().strip() #clean the single element
+                id = dict_f.get(clean_v)
+
+                if id:
+                    mapped_values.append(id)
+
+        elif key == 'subject':
+            operator = '~'
+
+            for v in val_list:
+                mapped_values.append(str(v).strip())
+
+        if mapped_values: #if the list is not empty
+            final_part_url = {op_key: {"operator": operator, "values": mapped_values}}
+            op_filters.append(final_part_url)
+    
+    json_string = json.dumps(op_filters)
+
+
+    return json_string
+
+print(build_OP_URL(risultato[0]))
+#print(create_ID_map('priority'))
