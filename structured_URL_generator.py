@@ -10,7 +10,7 @@ from langchain_core.output_parsers import JsonOutputParser
 #definizione della struttura JSON che deve restituire l'LLM
 class QueryParams(BaseModel):
     #aggiunta del chain of thought
-    reasinoning: str = Field(description="think")
+    reasoning: str = Field(description="think")
     macro_section: str = Field(description="Must be exactly 'projects' or 'work_packages', or 'not_allowed' if out of scope.")
     filters: dict = Field(description="Dictionary of extracted parameters. IMPORTANT: Every value inside this dictionary MUST be a list, even if there is only one element.",
                           examples=[{'priority': ['Low', 'High']}, {'active': ['t']}, {'assignee': ['Alba']}] )
@@ -42,7 +42,7 @@ ALLOWED FILTERS FOR 'work_packages':
 - 'status': The specific status or phase mentioned (e.g., 'Open', 'Closed', 'New', 'Confirmed'). Extract the exact concept.
 - 'id': Specific number ID of the task
 - 'subject': Text to search in the title
-- 'type': The type of work package (e.g., 'Milestone', 'Task', 'Bug', 'Feature')
+- 'type': The type of work package (e.g., 'Milestone', 'Task', 'Bug', 'Feature'), use ALWAYS the singular
 - 'version': The specific backlog, sprint, or phase it belongs to
 - 'project': The name of the specific project these tasks belong to (e.g., 'Alpha', 'Data Migration')
 - 'percentageDone': The completion percentage (e.g., '0', '50', '100')
@@ -53,7 +53,7 @@ Actually, ALL values in the filters dictionary MUST be formatted as lists (array
 
 EXAMPLE:
 User: "Find urgent milestones assigned to Alba in the Alpha project"
-Output: {{"reasoning": "The user wants work packages. 'urgent' means priority High and Immediate. 'milestones' is the type. 'Alba' is the assignee. 'Alpha' is the project.", "macro_section": "work_packages", "filters": {{"type": ["Milestones"], "priority": ["Immediate", "High"], "assignee": ["Alba"], "project": ["Alpha"]}}}}
+Output: {{"reasoning": "The user wants work packages. 'urgent' means priority High and Immediate. 'milestone' is the type. 'Alba' is the assignee. 'Alpha' is the project.", "macro_section": "work_packages", "filters": {{"type": ["Milestone"], "priority": ["Immediate", "High"], "assignee": ["Alba"], "project": ["Alpha"]}}}}
 
 {format_instructions}
 
@@ -89,6 +89,7 @@ blind_test_queries = [
     
     #OR condition, not possible to do it in OpenProject (TO DO: decide if u wanna keep it or not as exemple)
     "Find tasks assigned to Alba that are either urgent or 50% completed."
+
 ]
 
 generated_output = []
@@ -96,8 +97,6 @@ for i, q in enumerate(blind_test_queries):
     print(f"query {i+1}: ", {q})
     try:
         generated_output.append(chain.invoke({"format_instructions": parser.get_format_instructions(), "user_query": q}))
-        #print(risultato)
-        #print(40*'-')
     except Exception as e:
         print('error: ', e)
 
@@ -165,6 +164,12 @@ def create_ID_map(filter_name):
         return {}
 
 def build_OP_URL(json_data):
+    if isinstance(json_data, dict) and 'properties' in json_data:
+        json_data = json_data['properties']
+
+    if not isinstance(json_data, dict) or 'macro_section' not in json_data:
+            return "System Info: query failed."
+
     #manages the 'not_allowed' case
     if json_data['macro_section'] == 'not_allowed':
         return 'Operation not allowed, query out of domain'
@@ -173,7 +178,6 @@ def build_OP_URL(json_data):
     #if the macro-section is valid creates the first part of the request
     base_url = API_V3
     base_url += f'{macro_sect}'
-    #print(base_url)
     
     #we extract the filters
     filters = json_data.get('filters', {})
@@ -183,6 +187,7 @@ def build_OP_URL(json_data):
     f_need_map = ['author', 'assignee', 'priority', 'status', 'type', 'version', 'project']
 
     op_filters = []
+    missing_entities = []
 
     for key, val_list in filters.items():
         mapped_values = []
@@ -200,26 +205,71 @@ def build_OP_URL(json_data):
 
                 if id:
                     mapped_values.append(id)
+                else:
+                    missing_entities.append(f"'value: {v}' for the parameter {key}")
 
-        elif key == 'subject':
+        elif key in ['subject', 'name']:
             operator = '~' #operator to search the specific name
 
             for v in val_list:
                 mapped_values.append(str(v).strip()) #doesn't need cleaning 'cause the name MUST be equal (with Uppers and lowers)
 
+        else:
+            for v in val_list:
+                if key == 'id':
+                    mapped_values.append(int(v)) #covers cases where the number of the id is saved as a string but it needs to be a number for the API request
+                else:
+                    mapped_values.append(str(v).lower().strip())
+    
         if mapped_values: #if the list is not empty
             final_part_url = {op_key: {"operator": operator, "values": mapped_values}}
             op_filters.append(final_part_url)
-    
-    json_string = json.dumps(op_filters)
 
-    final_url = base_url + '?' + json_string
-    #return json_string
+    #if there's at least ONE error it interrupts the creation of the filter
+    if missing_entities:
+        errors = ", ".join(missing_entities)
+        return f"System Info: these entities requested by the user do not exist.{errors}."
+
+    if op_filters:
+        json_string = json.dumps(op_filters)
+        #final_url = base_url + '?filters=' + json_string
+        req = requests.Request('GET', base_url, params={"filters": json_string})
+        final_url = req.prepare().url
+    else:
+        final_url = base_url
+    
     return final_url
 
-#print(build_OP_URL(risultato[0]))
-#print(create_ID_map('priority'))
+#for i, go in enumerate(generated_output):
+#    print(f'url numb. {i}')
+#    print(build_OP_URL(go))
 
+def fetch_openproject_data(final_url):
+    if final_url.startswith("System Info"):
+        return final_url
+
+    try:
+        response = requests.get(final_url, auth=('apikey', api_key))
+        response.raise_for_status() #to check for example the case of invalid filter values
+        data = response.json()
+        
+        if data.get('total', 0) == 0:
+            return "System Info: no result"
+            
+        return data.get('_embedded', {}).get('elements', [])
+
+    except requests.exceptions.HTTPError as err:
+        if response.status_code == 400:
+            return "System Info: invalid parameters or unsufficient permissions"
+        else:
+            return f"System Info: communication error, error: {response.status_code})."
+            
+    except Exception as e:
+        return f"Error: {e}"
+    
 for i, go in enumerate(generated_output):
-    print('url numb. {i}')
-    print(build_OP_URL(go))
+    print(f'test: {i+1}')
+    url = build_OP_URL(go)
+
+    dati_finali = fetch_openproject_data(url)
+    print(dati_finali)
