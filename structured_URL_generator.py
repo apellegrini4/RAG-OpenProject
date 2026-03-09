@@ -91,24 +91,24 @@ blind_test_queries = [
     "Find tasks assigned to Alba that are either urgent or 50% completed."
 ]
 
-risultato = []
+generated_output = []
 for i, q in enumerate(blind_test_queries):
     print(f"query {i+1}: ", {q})
     try:
-        risultato.append(chain.invoke({"format_instructions": parser.get_format_instructions(), "user_query": q}))
+        generated_output.append(chain.invoke({"format_instructions": parser.get_format_instructions(), "user_query": q}))
         #print(risultato)
         #print(40*'-')
     except Exception as e:
-        print('errore: ', e)
+        print('error: ', e)
 
 
 load_dotenv()
 api_key = os.getenv('OP_API_KEY')
 op_url = os.getenv('OP_URL')
-API_V3_BASE = op_url + '/api/v3/'
+API_V3 = op_url + '/api/v3/'
 
 def build_get_ID_request(name):
-    base_url = API_V3_BASE
+    base_url = API_V3
 
     #builds the correct path for the get based on the filter name
     if name == 'priority':
@@ -144,6 +144,8 @@ def create_ID_map(filter_name):
 
         #transforms the response into a json to create the dictionary
         data = response.json()
+        #with open(f"{filter_name}.json", "w") as file: #code to check the json obtained
+        #    json.dump(data, file, indent=4)
 
         #every ID can be found inside a single element, which are under _embedded in the json
         elements = data.get('_embedded', {}).get('elements', {})
@@ -159,23 +161,23 @@ def create_ID_map(filter_name):
         return ID_dict
 
     except Exception as e:
-        print(f'Error while retrieving the filter {filter_name}')
+        print(f'Error while retrieving the filter {filter_name}', e)
         return {}
 
-def build_OP_URL(json):
+def build_OP_URL(json_data):
     #manages the 'not_allowed' case
-    if json['macro_section'] == 'not_allowed':
+    if json_data['macro_section'] == 'not_allowed':
         return 'Operation not allowed, query out of domain'
 
-    macro_sect = json['macro_section']
+    macro_sect = json_data['macro_section']
     #if the macro-section is valid creates the first part of the request
-    base_url = API_V3_BASE
+    base_url = API_V3
     base_url += f'{macro_sect}'
-    print(base_url)
+    #print(base_url)
     
     #we extract the filters
-    filters = json.get('filters', {})
-    print(filters)
+    filters = json_data.get('filters', {})
+    print('filters extracted \n', filters)
 
     #creates a dictionary only if the filter needs it
     f_need_map = ['author', 'assignee', 'priority', 'status', 'type', 'version', 'project']
@@ -200,10 +202,10 @@ def build_OP_URL(json):
                     mapped_values.append(id)
 
         elif key == 'subject':
-            operator = '~'
+            operator = '~' #operator to search the specific name
 
             for v in val_list:
-                mapped_values.append(str(v).strip())
+                mapped_values.append(str(v).strip()) #doesn't need cleaning 'cause the name MUST be equal (with Uppers and lowers)
 
         if mapped_values: #if the list is not empty
             final_part_url = {op_key: {"operator": operator, "values": mapped_values}}
@@ -211,8 +213,13 @@ def build_OP_URL(json):
     
     json_string = json.dumps(op_filters)
 
+    final_url = base_url + '?' + json_string
+    #return json_string
+    return final_url
 
-    return json_string
-
-print(build_OP_URL(risultato[0]))
+#print(build_OP_URL(risultato[0]))
 #print(create_ID_map('priority'))
+
+for i, go in enumerate(generated_output):
+    print('url numb. {i}')
+    print(build_OP_URL(go))
