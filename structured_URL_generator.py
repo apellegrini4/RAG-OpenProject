@@ -39,7 +39,7 @@ ALLOWED FILTERS FOR 'work_packages':
 - 'author': Name of the person who CREATED or OPENED the task. (CRITICAL: If the user says "created by X", it MUST be mapped to 'author', NEVER to 'assignee').
 - 'assignee': Name of the person ASSIGNED to work on the task.
 - 'priority': Priority level mentioned (e.g., 'Normal', 'Low', 'High', 'Immediate'), might be more than one
-- 'status': The specific status or phase mentioned (e.g., 'Open', 'Closed', 'New', 'Confirmed'). Extract the exact concept.
+- 'status': The specific status or phase mentioned (e.g., 'Closed', 'New', 'Confirmed'). Extract the exact concept.
 - 'id': Specific number ID of the task
 - 'subject': Text to search in the title
 - 'type': The type of work package (e.g., 'Milestone', 'Task', 'Bug', 'Feature'), use ALWAYS the singular
@@ -92,8 +92,26 @@ blind_test_queries = [
 
 ]
 
+#new test set queries
+second_test_set_queries = [
+    # 1. Stress Test Multi-Filtro (Mappa status, type, assignee, project)
+    "Show me all open bug assigned to Alba Pellegrini in the project E-commerce Redesign.",
+    
+    # 2. Ricerca Testuale mista (Mappa subject, project)
+    "Search for task that containes the word 'database' in the title inside the project E-commerce Redesign.",
+    
+    # 3. Disambiguazione Autore (Invece di usare due persone, cerchiamo solo per autore)
+    "Show me the tasks created by Alba Pellegrini which have High priority.",
+    
+    # 4. Ricerca Base sui Progetti
+    "Give me the list of all active and public projects.",
+    
+    # 5. Condizione incrociata senza progetto o utente
+    "What are the closed features with normal priority."
+]
+
 generated_output = []
-for i, q in enumerate(blind_test_queries):
+for i, q in enumerate(second_test_set_queries):
     print(f"query {i+1}: ", {q})
     try:
         generated_output.append(chain.invoke({"format_instructions": parser.get_format_instructions(), "user_query": q}))
@@ -164,7 +182,7 @@ def create_ID_map(filter_name):
         return {}
 
 def build_OP_URL(json_data):
-    if isinstance(json_data, dict) and 'properties' in json_data:
+    if isinstance(json_data, dict) and 'properties' in json_data: #all the data are stored by default in the section properties of the json
         json_data = json_data['properties']
 
     if not isinstance(json_data, dict) or 'macro_section' not in json_data:
@@ -181,7 +199,7 @@ def build_OP_URL(json_data):
     
     #we extract the filters
     filters = json_data.get('filters', {})
-    print('filters extracted \n', filters)
+    #print('filters extracted \n', filters)
 
     #creates a dictionary only if the filter needs it
     f_need_map = ['author', 'assignee', 'priority', 'status', 'type', 'version', 'project']
@@ -193,6 +211,18 @@ def build_OP_URL(json_data):
         mapped_values = []
         operator = '='
         op_key = key #the name of the filter to put in the query
+
+        #rule for open and closed statuses, it manages the case and then goes on with the next filter
+        if key == 'status':
+            is_open = any(str(v).lower().strip() == 'open' for v in val_list)
+            is_closed = any(str(v).lower().strip() == 'closed' for v in val_list)
+            
+            if is_open:
+                op_filters.append({f"{key}_id": {"operator": "o", "values": []}})
+                continue
+            elif is_closed:
+                op_filters.append({f"{key}_id": {"operator": "c", "values": []}})
+                continue
 
         if key in f_need_map:
             op_key = f'{key}_id' #if the filter is search by ID it's written in this way
@@ -272,4 +302,4 @@ for i, go in enumerate(generated_output):
     url = build_OP_URL(go)
 
     dati_finali = fetch_openproject_data(url)
-    print(dati_finali)
+    print('DATI \n', dati_finali)
