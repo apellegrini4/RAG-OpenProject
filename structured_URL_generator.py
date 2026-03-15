@@ -218,14 +218,14 @@ def build_OP_URL(json_data):
             is_closed = any(str(v).lower().strip() == 'closed' for v in val_list)
             
             if is_open:
-                op_filters.append({f"{key}_id": {"operator": "o", "values": []}})
+                op_filters.append({key: {"operator": "o", "values": []}})
                 continue
             elif is_closed:
-                op_filters.append({f"{key}_id": {"operator": "c", "values": []}})
+                op_filters.append({key: {"operator": "c", "values": []}})
                 continue
 
         if key in f_need_map:
-            op_key = f'{key}_id' #if the filter is search by ID it's written in this way
+            #op_key = f'{key}_id' #if the filter is search by ID it's written in this way
             dict_f = create_ID_map(key) #creates the dictionary only if it's needed
 
             #every key has a list (it can be null, of 1 element of more but still a list)
@@ -234,7 +234,7 @@ def build_OP_URL(json_data):
                 id = dict_f.get(clean_v)
 
                 if id:
-                    mapped_values.append(id)
+                    mapped_values.append(str(id))
                 else:
                     missing_entities.append(f"'value: {v}' for the parameter {key}")
 
@@ -247,7 +247,7 @@ def build_OP_URL(json_data):
         else:
             for v in val_list:
                 if key == 'id':
-                    mapped_values.append(int(v)) #covers cases where the number of the id is saved as a string but it needs to be a number for the API request
+                    mapped_values.append(int(v)) #covers cases where the number of the id is not saved as an int
                 else:
                     mapped_values.append(str(v).lower().strip())
     
