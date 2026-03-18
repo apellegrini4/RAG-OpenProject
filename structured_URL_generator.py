@@ -63,7 +63,7 @@ User query: {user_query}
 prompt = ChatPromptTemplate.from_template(template)
 chain = prompt | llm | parser
 
-#TEST SECTION
+#QUERIES SECTION
 #first test set
 #test_queries = [
 #    "Show me all active and public projects.",
@@ -110,20 +110,14 @@ second_test_set_queries = [
     "What are the closed features with normal priority."
 ]
 
-generated_output = []
-for i, q in enumerate(second_test_set_queries):
-    print(f"query {i+1}: ", {q})
-    try:
-        generated_output.append(chain.invoke({"format_instructions": parser.get_format_instructions(), "user_query": q}))
-    except Exception as e:
-        print('error: ', e)
-
 
 load_dotenv()
 api_key = os.getenv('OP_API_KEY')
 op_url = os.getenv('OP_URL')
 API_V3 = op_url + '/api/v3/'
 
+#FUNCTIONS SECTION
+#function to map the filter to the correct name
 def build_get_ID_request(name):
     base_url = API_V3
 
@@ -150,6 +144,7 @@ def build_get_ID_request(name):
         raise ValueError(f"Error, the filter '{name}' does'nt have an endpoint associated to an ID list.")
     return base_url
 
+#function to create a dictionary with the real ID's of the specific filter
 def create_ID_map(filter_name):
     #finds the correct URL
     url = build_get_ID_request(filter_name)
@@ -181,6 +176,7 @@ def create_ID_map(filter_name):
         print(f'Error while retrieving the filter {filter_name}', e)
         return {}
 
+#function to construct the final URL
 def build_OP_URL(json_data):
     if isinstance(json_data, dict) and 'properties' in json_data: #all the data are stored by default in the section properties of the json
         json_data = json_data['properties']
@@ -225,7 +221,7 @@ def build_OP_URL(json_data):
                 continue
 
         if key in f_need_map:
-            #op_key = f'{key}_id' #if the filter is search by ID it's written in this way
+            #op_key = f'{key}_id'
             dict_f = create_ID_map(key) #creates the dictionary only if it's needed
 
             #every key has a list (it can be null, of 1 element of more but still a list)
@@ -270,10 +266,7 @@ def build_OP_URL(json_data):
     
     return final_url
 
-#for i, go in enumerate(generated_output):
-#    print(f'url numb. {i}')
-#    print(build_OP_URL(go))
-
+#function that does the actual request
 def fetch_openproject_data(final_url):
     if final_url.startswith("System Info"):
         return final_url
@@ -286,7 +279,8 @@ def fetch_openproject_data(final_url):
         if data.get('total', 0) == 0:
             return "System Info: no result"
             
-        return data.get('_embedded', {}).get('elements', [])
+        #return data.get('_embedded', {}).get('elements', [])
+        return data
 
     except requests.exceptions.HTTPError as err:
         if response.status_code == 400:
@@ -296,10 +290,22 @@ def fetch_openproject_data(final_url):
             
     except Exception as e:
         return f"Error: {e}"
+
+
+#TEST SECTION
+generated_output = []
+for i, q in enumerate(second_test_set_queries):
+    print(f"query {i+1}: ", {q})
+    try:
+        generated_output.append(chain.invoke({"format_instructions": parser.get_format_instructions(), "user_query": q}))
+    except Exception as e:
+        print('error: ', e)
     
 for i, go in enumerate(generated_output):
-    print(f'test: {i+1}')
+    #print(f'test: {i+1}')
     url = build_OP_URL(go)
 
     dati_finali = fetch_openproject_data(url)
-    print('DATI \n', dati_finali)
+    #print('DATI \n', dati_finali)
+    with open(f"Data-Q{i}.json", "w") as file: #code to check the json obtained
+        json.dump(dati_finali, file, indent=4)
