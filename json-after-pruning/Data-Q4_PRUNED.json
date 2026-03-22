@@ -1,0 +1,18 @@
+{
+    "total_results": 1,
+    "number_of_results_in_the_page": 1,
+    "items": [
+        {
+            "type": "Feature",
+            "id": 38,
+            "subject": "task2",
+            "description": "",
+            "createdAt": "2026-03-13T11:05:40.371Z",
+            "updatedAt": "2026-03-13T11:10:34.239Z",
+            "status": "Closed",
+            "priority": "Normal",
+            "project": "Mobile App",
+            "author": "Alba Pellegrini"
+        }
+    ]
+}

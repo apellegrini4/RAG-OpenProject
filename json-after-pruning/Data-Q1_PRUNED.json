@@ -1,0 +1,18 @@
+{
+    "total_results": 1,
+    "number_of_results_in_the_page": 1,
+    "items": [
+        {
+            "type": "Task",
+            "id": 39,
+            "subject": "Aggiornare il database",
+            "description": "",
+            "createdAt": "2026-03-13T11:12:15.019Z",
+            "updatedAt": "2026-03-13T11:12:15.019Z",
+            "status": "New",
+            "priority": "Normal",
+            "project": "E-commerce Redesign",
+            "author": "Alba Pellegrini"
+        }
+    ]
+}

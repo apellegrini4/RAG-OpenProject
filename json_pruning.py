@@ -45,4 +45,11 @@ def clean_and_remodel_json(data):
             links = item.get('_links', {})
 
             for l in useful_links:
-                pass
+                if l in links:
+                    title = links[l].get('title')
+                    if title:
+                        reduced_item[l] = title
+
+            refined_json['items'].append(reduced_item) #appends the item containg only important info to the final json
+
+    return refined_json

@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
+from json_pruning import clean_and_remodel_json
 
 #definizione della struttura JSON che deve restituire l'LLM
 class QueryParams(BaseModel):
@@ -259,7 +260,7 @@ def build_OP_URL(json_data):
     if op_filters:
         json_string = json.dumps(op_filters)
         #final_url = base_url + '?filters=' + json_string
-        req = requests.Request('GET', base_url, params={"filters": json_string})
+        req = requests.Request('GET', base_url, params={"filters": json_string, 'sortBy':'[["createdAt","desc"]]'}) #to obtain the most recent results
         final_url = req.prepare().url
     else:
         final_url = base_url
@@ -305,7 +306,10 @@ for i, go in enumerate(generated_output):
     #print(f'test: {i+1}')
     url = build_OP_URL(go)
 
-    dati_finali = fetch_openproject_data(url)
-    #print('DATI \n', dati_finali)
-    with open(f"Data-Q{i}.json", "w") as file: #code to check the json obtained
-        json.dump(dati_finali, file, indent=4)
+    data = fetch_openproject_data(url)
+
+    final_data = clean_and_remodel_json(data)
+    #with open(f"Data-Q{i}.json", "w") as file: #code to check the json obtained
+    #    json.dump(data, file, indent=4)
+    #with open(f"Data-Q{i}_PRUNED.json", "w", encoding="utf-8") as file:
+    #    json.dump(final_data, file, indent=4, ensure_ascii=False)
