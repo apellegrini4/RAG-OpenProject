@@ -92,7 +92,7 @@ if __name__ == "__main__":
         ]
     }
     
-    question = "Show me all open bug assigned to Alba Pellegrini in the project E-commerce Redesign. Than explain your tought process"
+    question = "Show me all open bug assigned to Alba Pellegrini in the project E-commerce Redesign."
     
     print("Processing response...\n")
     final_response = generate_response(question, mock_pruned_json)
