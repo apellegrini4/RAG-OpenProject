@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask, request, jsonify
-from embed2 import embed
-from query import query
-from get_vector_db import get_vector_db
+from file_prova.embed2 import embed
+from originali.query import query
+from originali.get_vector_db import get_vector_db
 
 TEMP_FOLDER = os.getenv('TEMP_FOLDER', './_temp')
 os.makedirs(TEMP_FOLDER, exist_ok=True)

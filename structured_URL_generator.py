@@ -294,22 +294,22 @@ def fetch_openproject_data(final_url):
 
 
 #TEST SECTION
-generated_output = []
-for i, q in enumerate(second_test_set_queries):
-    print(f"query {i+1}: ", {q})
-    try:
-        generated_output.append(chain.invoke({"format_instructions": parser.get_format_instructions(), "user_query": q}))
-    except Exception as e:
-        print('error: ', e)
-    
-for i, go in enumerate(generated_output):
-    #print(f'test: {i+1}')
-    url = build_OP_URL(go)
-
-    data = fetch_openproject_data(url)
-
-    final_data = clean_and_remodel_json(data)
-    #with open(f"Data-Q{i}.json", "w") as file: #code to check the json obtained
-    #    json.dump(data, file, indent=4)
-    #with open(f"Data-Q{i}_PRUNED.json", "w", encoding="utf-8") as file:
-    #    json.dump(final_data, file, indent=4, ensure_ascii=False)
+#generated_output = []
+#for i, q in enumerate(second_test_set_queries):
+#    print(f"query {i+1}: ", {q})
+#    try:
+#        generated_output.append(chain.invoke({"format_instructions": parser.get_format_instructions(), "user_query": q}))
+#    except Exception as e:
+#        print('error: ', e)
+#    
+#for i, go in enumerate(generated_output):
+#    #print(f'test: {i+1}')
+#    url = build_OP_URL(go)
+#
+#    data = fetch_openproject_data(url)
+#
+#    final_data = clean_and_remodel_json(data)
+#    #with open(f"Data-Q{i}.json", "w") as file: #code to check the json obtained
+#    #    json.dump(data, file, indent=4)
+#    #with open(f"Data-Q{i}_PRUNED.json", "w", encoding="utf-8") as file:
+#    #    json.dump(final_data, file, indent=4, ensure_ascii=False)#

@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 #from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from get_vector_db import get_vector_db
+from originali.get_vector_db import get_vector_db
 
 TEMP_FOLDER = os.getenv('TEMP_FOLDER', './_temp')
 

@@ -48,54 +48,54 @@ def generate_response(user_query, reduced_json):
 
 #--------------------
 #TEMPORARY TEST
-if __name__ == "__main__":
-    #example
-    mock_pruned_json = {
-        "total_results": 3,
-        "number_of_results_in_the_page": 3,
-        "items": [
-            {
-                "type_entity": "WorkPackage",
-                "id": 37,
-                "subject": "task1",
-                "createdAt": "2026-03-13T10:55:08.576Z",
-                "type": "Bug",
-                "status": "Confirmed",
-                "priority": "High",
-                "project": "E-commerce Redesign",
-                "assignee": "Alba Pellegrini"
-            },
-
-            {
-                "type_entity": "WorkPackage",
-                "id": 42,
-                "subject": "task7",
-                "createdAt": "2026-03-13T10:55:08.576Z",
-                "type": "Bug",
-                "status": "Developed",
-                "priority": "Low",
-                "project": "E-commerce Redesign",
-                "assignee": "Alba Pellegrini"
-            },
-
-            {
-                "type_entity": "WorkPackage",
-                "id": 73,
-                "subject": "task9",
-                "createdAt": "2026-03-13T10:55:08.576Z",
-                "type": "Bug",
-                "status": "Test failed",
-                "priority": "Medium",
-                "project": "E-commerce Redesign",
-                "assignee": "Alba Pellegrini"
-            }
-        ]
-    }
-    
-    question = "Show me all open bug assigned to Alba Pellegrini in the project E-commerce Redesign."
-    
-    print("Processing response...\n")
-    final_response = generate_response(question, mock_pruned_json)
-    
-    print("--- RESPONSE ---")
-    print(final_response)
+#if __name__ == "__main__":
+#    #example
+#    mock_pruned_json = {
+#        "total_results": 3,
+#        "number_of_results_in_the_page": 3,
+#        "items": [
+#            {
+#                "type_entity": "WorkPackage",
+#                "id": 37,
+#                "subject": "task1",
+#                "createdAt": "2026-03-13T10:55:08.576Z",
+#                "type": "Bug",
+#                "status": "Confirmed",
+#                "priority": "High",
+#                "project": "E-commerce Redesign",
+#                "assignee": "Alba Pellegrini"
+#            },
+#
+#            {
+#                "type_entity": "WorkPackage",
+#                "id": 42,
+#                "subject": "task7",
+#                "createdAt": "2026-03-13T10:55:08.576Z",
+#                "type": "Bug",
+#                "status": "Developed",
+#                "priority": "Low",
+#                "project": "E-commerce Redesign",
+#                "assignee": "Alba Pellegrini"
+#            },
+#
+#            {
+#                "type_entity": "WorkPackage",
+#                "id": 73,
+#                "subject": "task9",
+#                "createdAt": "2026-03-13T10:55:08.576Z",
+#                "type": "Bug",
+#                "status": "Test failed",
+#                "priority": "Medium",
+#                "project": "E-commerce Redesign",
+#                "assignee": "Alba Pellegrini"
+#            }
+#        ]
+#    }
+#    
+#    question = "Show me all open bug assigned to Alba Pellegrini in the project E-commerce Redesign."
+#    
+#    print("Processing response...\n")
+#    final_response = generate_response(question, mock_pruned_json)
+#    
+#    print("--- RESPONSE ---")
+#    print(final_response)
