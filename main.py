@@ -4,9 +4,14 @@ from response_generator import generate_response
 
 def run(user_query):
     try:
-        json_params = chain.invoke({"format_instructions": parser.get_format_instructions()})
+        json_params = chain.invoke({"format_instructions": parser.get_format_instructions(),
+                                    "user_query": user_query})
     except Exception as e:
         print('error: ', e)
+
+    #------------DEBUG------------
+    print(json_params)
+
 
     url = build_OP_URL(json_params)
     data = fetch_openproject_data(url)
@@ -20,5 +25,6 @@ def run(user_query):
     print(final_answer)
 
 if __name__ == '__main__':
-    query = "Show me all open bugs assigned to me"
+    #query = "Show me all open bugs assigned to me"
+    query = "What open tasks are assigned to Mario Rossi?"
     run(query)
