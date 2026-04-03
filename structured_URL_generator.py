@@ -8,19 +8,19 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from json_pruning import clean_and_remodel_json
 
-#definizione della struttura JSON che deve restituire l'LLM
+#definition of the JSON structure that the LLM should return
 class QueryParams(BaseModel):
-    #aggiunta del chain of thought
+    #adding the chain of thought
     reasoning: str = Field(description="think")
     macro_section: str = Field(description="Must be exactly 'projects' or 'work_packages', or 'not_allowed' if out of scope.")
     filters: dict = Field(description="Dictionary of extracted parameters. IMPORTANT: Every value inside this dictionary MUST be a list, even if there is only one element.",
                           examples=[{'priority': ['Low', 'High']}, {'active': ['t']}, {'assignee': ['Alba']}] )
 
-#scelta del modello e del parser
-llm = ChatOllama(model='llama3.1', temperature=0, format="json")
+#choice of model and parser
+llm = ChatOllama(model='mistral', temperature=0, format="json")
 parser = JsonOutputParser(pydantic_object=QueryParams)
 
-#scrittura di un template strutturato che sfrutti anche il Chain of Thought
+#writing a structured template that also uses the Chain of Thought
 template = """You are an API semantic extractor.
 Your ONLY task is to understand the user query and extract the macro-section and the search parameters.
 DO NOT generate URLs. Output ONLY a valid JSON object matching the requested schema.
@@ -95,19 +95,19 @@ blind_test_queries = [
 
 #new test set queries
 second_test_set_queries = [
-    # 1. Stress Test Multi-Filtro (Mappa status, type, assignee, project)
+    #(status, type, assignee, project)
     "Show me all open bug assigned to Alba Pellegrini in the project E-commerce Redesign.",
     
-    # 2. Ricerca Testuale mista (Mappa subject, project)
+    #mixed text search (subject, project)
     "Search for task that containes the word 'database' in the title inside the project E-commerce Redesign.",
     
-    # 3. Disambiguazione Autore (Invece di usare due persone, cerchiamo solo per autore)
+    #aearch by author
     "Show me the tasks created by Alba Pellegrini which have High priority.",
     
-    # 4. Ricerca Base sui Progetti
+    #general search of projects
     "Give me the list of all active and public projects.",
     
-    # 5. Condizione incrociata senza progetto o utente
+    #search without project or assignee
     "What are the closed features with normal priority."
 ]
 
@@ -222,7 +222,6 @@ def build_OP_URL(json_data):
                 continue
 
         if key in f_need_map:
-            #op_key = f'{key}_id'
             dict_f = create_ID_map(key) #creates the dictionary only if it's needed
 
             #every key has a list (it can be null, of 1 element of more but still a list)
@@ -259,7 +258,6 @@ def build_OP_URL(json_data):
 
     if op_filters:
         json_string = json.dumps(op_filters)
-        #final_url = base_url + '?filters=' + json_string
         req = requests.Request('GET', base_url, params={"filters": json_string, 'sortBy':'[["createdAt","desc"]]'}) #to obtain the most recent results
         final_url = req.prepare().url
     else:
@@ -280,7 +278,6 @@ def fetch_openproject_data(final_url):
         if data.get('total', 0) == 0:
             return "System Info: no result"
             
-        #return data.get('_embedded', {}).get('elements', [])
         return data
 
     except requests.exceptions.HTTPError as err:
@@ -312,4 +309,4 @@ def fetch_openproject_data(final_url):
 #    #with open(f"Data-Q{i}.json", "w") as file: #code to check the json obtained
 #    #    json.dump(data, file, indent=4)
 #    #with open(f"Data-Q{i}_PRUNED.json", "w", encoding="utf-8") as file:
-#    #    json.dump(final_data, file, indent=4, ensure_ascii=False)#
+#    #    json.dump(final_data, file, indent=4, ensure_ascii=False)

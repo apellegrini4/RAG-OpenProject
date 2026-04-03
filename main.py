@@ -18,13 +18,13 @@ def run(user_query):
     final_data = clean_and_remodel_json(data)
 
     print(f'Question: {user_query}')
+    print(final_data)
     final_answer = generate_response(user_query, final_data)
     print(f'Answer: {final_answer}')
 
-
-    print(final_answer)
-
 if __name__ == '__main__':
     #query = "Show me all open bugs assigned to me"
-    query = "What open tasks are assigned to Mario Rossi?"
+    #query = "What open bugs are assigned to Mario Rossi?"
+    #query = "Give me a summary of all the tasks in the Website Migration project."
+    query = "Are there any tasks in the Internal Audit project?"
     run(query)

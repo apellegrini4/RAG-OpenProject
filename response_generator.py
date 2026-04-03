@@ -3,7 +3,7 @@ from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-llm = ChatOllama(model='mistral', temperature=0.5)
+llm = ChatOllama(model='mistral', temperature=0.5) #changed the model from mistral to llama3.1
 parser = StrOutputParser()
 
 #I don't need the generation of 5 different queries anymore
@@ -12,9 +12,11 @@ template = '''You are a professional AI language model assistant.
 
     RULES:
     - You need to answer in a natural language and you CANNOT invent or hallucinate information. If you can't find the answer inside of the json you need to responde politly that you don't have that information.
-    - You NEED to COMPARE the section: total_results with the other section: number_of_results_in_the_page. If the first one is GREATER than the other one you MUST INFORM the user that you are only showing the most recent results.
-    - If the json contains an 'error' or a 'System Info' communicate and explain the problem politly to the user.
+    - You NEED to COMPARE the section: total_results with the other section: number_of_results_in_the_page. ONLY if the first one is GREATER than the other one you MUST INFORM the user that you are only showing the most recent results, OTHERWISE DON'T MENTION the comparison.
+    - If the json contains an 'error' or a 'System Info' your ONLY job is to report the exact error reason to the user and suggest they verify their permissions. DO NOT invent or mention any tasks.
     - DO NOT deduce, interpret or translate the exact values in the JSON, your job is only to report the data you find.
+    - The conversation MUST be natural, NEVER mention the words 'json' or 'data provided'. If there is one task, instead of reffering to the json, say for example: 'I found one open task'.
+    - Always provide the details of the items you find. List the ID, Subject/Title, and Status of the items so the user knows exactly what they are.
 
     {json}
 
