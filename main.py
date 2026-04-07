@@ -25,6 +25,6 @@ def run(user_query):
 if __name__ == '__main__':
     #query = "Show me all open bugs assigned to me"
     #query = "What open bugs are assigned to Mario Rossi?"
-    #query = "Give me a summary of all the tasks in the Website Migration project."
-    query = "Are there any tasks in the Internal Audit project?"
+    query = "Give me a summary of all the tasks in the Website Migration project."
+    #query = "Are there any tasks in the Internal Audit project?"
     run(query)
