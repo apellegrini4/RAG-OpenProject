@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
-from json_pruning import clean_and_remodel_json
 
 #definition of the JSON structure that the LLM should return
 class QueryParams(BaseModel):
@@ -20,7 +19,7 @@ class QueryParams(BaseModel):
 llm = ChatOllama(model='phi3.5', temperature=0, format="json")
 parser = JsonOutputParser(pydantic_object=QueryParams)
 
-#writing a structured template that also uses the Chain of Thought
+#structured template that uses the Chain of Thought
 template = """You are an API semantic extractor.
 Your ONLY task is to understand the user query and extract the macro-section and the search parameters.
 DO NOT generate URLs. Output ONLY a valid JSON object matching the requested schema.
@@ -105,9 +104,9 @@ def create_ID_map(filter_name):
     #makes the request to get the json and creates a dictionary for that filter
     try:
         response = requests.get(url, auth=('apikey', api_key))
-        response.raise_for_status() #in case of wrong URL (error 404) --> in the future it can be changed by considering the number of the error, because some users might receive error 402 (?) if they lack of permissions
+        response.raise_for_status() #in case of wrong URL (error 404)
 
-        #transforms the response into a json to create the dictionary
+        #transforms the json response into a python object to create the dictionary
         data = response.json()
         #with open(f"{filter_name}.json", "w") as file: #code to check the json obtained
         #    json.dump(data, file, indent=4)

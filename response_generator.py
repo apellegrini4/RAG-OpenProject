@@ -3,7 +3,7 @@ from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-llm = ChatOllama(model='phi3.5', temperature=0.5) #changed the model from mistral to llama3.1
+llm = ChatOllama(model='phi3.5', temperature=0.5)
 parser = StrOutputParser()
 
 #I don't need the generation of 5 different queries anymore
