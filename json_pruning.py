@@ -9,7 +9,7 @@ if not os.path.exists(TEMP_FOLDER):
 def clean_and_remodel_json(data):
     #check to see if there was an error or not
     if isinstance(data, str):
-        return data     #System Info:...
+        return {"error_message": data}     #System Info:...
 
     refined_json = {
         'total_results': data.get('total', 0),
