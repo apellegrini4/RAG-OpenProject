@@ -15,10 +15,6 @@ class QueryParams(BaseModel):
     filters: dict = Field(description="Dictionary of extracted parameters. IMPORTANT: Every value inside this dictionary MUST be a list, even if there is only one element.",
                           examples=[{'priority': ['Low', 'High']}, {'active': ['t']}, {'assignee': ['Alba']}] )
 
-#choice of model and parser
-llm = ChatOllama(model='phi3.5', temperature=0, format="json")
-parser = JsonOutputParser(pydantic_object=QueryParams)
-
 #structured template that uses the Chain of Thought
 template = """You are an API semantic extractor.
 Your ONLY task is to understand the user query and extract the macro-section and the search parameters.
@@ -60,8 +56,15 @@ Output: {{"reasoning": "The user wants work packages. 'urgent' means priority Hi
 User query: {user_query}
 """
 
+#setting of the parser and creation of the chain
+parser = JsonOutputParser(pydantic_object=QueryParams)
 prompt = ChatPromptTemplate.from_template(template)
-chain = prompt | llm | parser
+
+def define_urlConstructor_chain(model_name):
+    llm = ChatOllama(model=model_name, temperature=0, format="json")
+    chain = prompt | llm | parser
+
+    return chain
 
 load_dotenv()
 api_key = os.getenv('OP_API_KEY')
