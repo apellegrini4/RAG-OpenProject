@@ -20,7 +20,6 @@ template = '''You are a professional AI language model assistant.
 
     USER QUERY: {user_query}
 '''
-    # - You NEED to COMPARE the section: total_results with the other section: number_of_results_in_the_page. ONLY if the first one is GREATER than the other one you MUST INFORM the user that you are only showing the most recent results, OTHERWISE DON'T MENTION the comparison.
 
 #setting of the parser and creation of the chain
 parser = StrOutputParser()
@@ -35,20 +34,20 @@ def define_response_chain(model_name):
 
     return chain
 
+#not used anymore, everything is called in the api.py file
+# def generate_response(user_query, reduced_json):
+#     if isinstance(reduced_json, dict) or isinstance(reduced_json, list):
+#         json_data = json.dumps(reduced_json, indent=2)
+#     else:
+#         json_data = str(reduced_json)
 
-def generate_response(user_query, reduced_json):
-    if isinstance(reduced_json, dict) or isinstance(reduced_json, list):
-        json_data = json.dumps(reduced_json, indent=2)
-    else:
-        json_data = str(reduced_json)
+#     try:
+#         response = chain.invoke({
+#           'json' : json_data,
+#           'user_query' : user_query  
+#         })
 
-    try:
-        response = chain.invoke({
-          'json' : json_data,
-          'user_query' : user_query  
-        })
-
-        return response
+#         return response
     
-    except Exception as e:
-        return 'I am sorry, there was an error in the generation of the response'
+#     except Exception as e:
+#         return 'I am sorry, there was an error in the generation of the response'
