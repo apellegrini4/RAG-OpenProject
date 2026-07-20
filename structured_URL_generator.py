@@ -96,7 +96,7 @@ def build_get_ID_request(name):
         base_url += 'projects'  
 
     else:
-        raise ValueError(f"Error, the filter '{name}' does'nt have an endpoint associated to an ID list.")
+        raise ValueError(f"Error, the filter '{name}' doesn't have an endpoint associated to an ID list.")
     return base_url
 
 #function to create a dictionary with the real ID's of the specific filter

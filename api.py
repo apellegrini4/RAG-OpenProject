@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import json
 from structured_URL_generator import parser, build_OP_URL, define_urlConstructor_chain, fetch_openproject_data
-from response_generator import define_response_chain, generate_response
+from response_generator import define_response_chain
 from json_pruning import clean_and_remodel_json
 
 import time
