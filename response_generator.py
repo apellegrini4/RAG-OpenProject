@@ -26,7 +26,7 @@ parser = StrOutputParser()
 prompt = ChatPromptTemplate.from_template(template)
 
 def define_response_chain(model_name):
-    llm = ChatOllama(model=model_name, temperature=0)
+    llm = ChatOllama(model=model_name, temperature=0.6)
     chain = (   prompt 
             |   llm 
             |   parser 
