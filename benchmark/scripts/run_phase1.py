@@ -120,7 +120,7 @@ def main():
     with open(run_dir / "raw_runs.jsonl", "w", encoding="utf-8") as raw_file:
         for model in models:
             print(f"=== MODEL: {model} ===")
-            chain = prompt | ChatOllama(model=model, temperature=temperature, format="json")
+            chain = prompt | ChatOllama(model=model, temperature=temperature, format="json", num_predict=512)
             results, latencies = run_model(chain, questions, format_instructions, reps, model, raw_file)
             summary_rows.append(summarize_stats(model, results, latencies))
             print()
