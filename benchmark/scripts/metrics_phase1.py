@@ -36,11 +36,13 @@ def exact_filter_match(pred, real) -> bool:
 
 
 def count_distinct(items) -> int:
-    """ counts the number of distinct items """
+    """ counts the number of distinct items ignoring the reasoning field"""
     distinct = []
     for item in items:
-        if item not in distinct:
-            distinct.append(item)
+        #creates a new dictionary without the reasoning
+        key = {k: v for k, v in item.items() if k != "reasoning"} if isinstance(item, dict) else item
+        if key not in distinct:
+            distinct.append(key)
     return len(distinct)
 
 
