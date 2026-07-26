@@ -1,7 +1,9 @@
 .env
 .venv/
 __pycache__/
-chroma/
 *.txt
 *.pdf
 .DS_Store
+_temp
+benchmark/runs/*
+!benchmark/runs/.gitkeep
