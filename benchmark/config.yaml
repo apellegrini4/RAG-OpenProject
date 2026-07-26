@@ -3,10 +3,9 @@ models_phase1: ["qwen2.5-coder:1.5b", "deepseek-coder:1.3b", "llama3.2:1b", "qwe
 models_phase2: ["llama3.2:3b", "qwen2.5:3b", "gemma3:4b", "phi4-mini-reasoning"]
 
 # temperatures
-temperature_phase1: 0.0    # deterministic extraction (greedy decoding)
-temperature_phase2: 0.6    # allow response variability
-
-repetitions_latency: 30       # more repetitions to estimate latency reliably
+temperature_phase1: 0.0
+temperature_phase2: 0.6
+repetitions_latency: 30
 
 # seed
 seed: 42
