@@ -1,4 +1,4 @@
-""" Test of the first phase, determinism check with temperature=0.
+""" Test of the first phase, filters extraction.
 
 For each phase-1 model in config.yaml each question is repeated N times (default 30).
 Checks if the json is identical to the real one and verifies also that the output is a
@@ -9,10 +9,9 @@ Usage example:
     python benchmark/scripts/run_phase1.py --repetitions 30 --label demo
     python benchmark/scripts/run_phase1.py --models qwen2.5-coder:1.5b
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import argparse
-import csv
 import json
 import sys
 import time
@@ -23,25 +22,62 @@ PROJECT_ROOT = CWD.parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(CWD))
 
-from metrics_phase1 import evaluate_question, summarize_stats
+from metrics_phase1 import evaluate_question, summarize_stats, failure_reason, schema_validation, exact_filter_match
+from llm_builder import build_llm, CONFIG_PATH
+import writers
 
+#function to customize run parameters from the terminal
 def parse_args():
-    ap = argparse.ArgumentParser(description="Phase-1 determinism check at temperature 0")
-    ap.add_argument("--config", default=str(PROJECT_ROOT / "benchmark" / "config.yaml"))
+    ap = argparse.ArgumentParser(description="Phase-1")
     ap.add_argument("--repetitions", type=int, default=None,
-                    help="repetitions per question (default: config.repetitions_latency or 30)")
+                    help="repetitions per question (default: 30)")
     ap.add_argument("--models", nargs="*", default=None,
                     help="override the model list from config (space separated)")
-    ap.add_argument("--label", default="determinism-check")
+    ap.add_argument("--label", default="demo")
     return ap.parse_args()
 
-# experiment loop for one model
-def run_model(chain, questions, format_instructions, reps, model, raw_file) -> tuple:
-    results, latencies = [], []
+def save_results(repetitions, q, m_dir):
+    """ writes the resultes in separated folders"""
+    answers_rows, reasoning_rows, failure_rows = [], [], []
+
+    for i, rep in enumerate(repetitions):
+        parsed = rep["parsed"]
+        #divides in 2 different files the answer (with the metrics) and corrispective reasoning 
+        answers_rows.append({
+            "question_id": q["id"], "repetition": i,
+            "parsed": parsed,
+            "json_correct": schema_validation(parsed),
+            "exact_match": schema_validation(parsed) and exact_filter_match(parsed, q),
+            "latency": rep["latency"], "error": rep["error"],
+        })
+        reasoning_rows.append({
+            "question_id": q["id"], "repetition": i,
+            "reasoning": parsed.get("reasoning") if isinstance(parsed, dict) else None,
+        })
+
+        #saves model raw answers only in case of failure
+        reason = failure_reason(parsed, q)
+        if reason is not None:
+            failure_rows.append({
+                "question_id": q["id"], "repetition": i,
+                "failure_reason": reason, "error": rep["error"], "raw": rep["raw"],
+            })
+
+    #writes the info
+    writers.write_answers(m_dir, answers_rows)
+    writers.write_reasoning(m_dir, reasoning_rows)
+    writers.write_failures(m_dir, failure_rows)
+
+
+def run_model(chain, questions, format_instructions, reps, model, m_dir):
+    """ invokes the model reps times and calculates the results """ 
+    results = []
+    latencies = []
 
     for q in questions:
         repetitions = []
 
+        #every question is repeated 'reps' times
         for _ in range(reps):
             start = time.time()
             error = None
@@ -58,86 +94,96 @@ def run_model(chain, questions, format_instructions, reps, model, raw_file) -> t
                 parsed = json.loads(raw)
             except Exception:
                 parsed = None
-            # raw is the text which is later parsed as dict (contains None if invalid)
-            repetitions.append({"raw": raw, "parsed": parsed,
-                                "latency": round(time.time() - start, 3), "error": error})
+
+            repetitions.append({"raw": raw, "parsed": parsed, "latency": round(time.time() - start, 3), "error": error})
 
         latencies.extend(rep["latency"] for rep in repetitions)
         metrics = evaluate_question([rep["parsed"] for rep in repetitions], q)
 
-        raw_file.write(json.dumps({
-            "model": model,
-            "question_id": q["id"],
-            "difficulty": q["difficulty"],
-            "real_macro": q["macro_section"],
-            "real_filters": q["filters"],
-            **metrics,
-            "repetitions": repetitions,
-        }, ensure_ascii=False) + "\n")
+        save_results(repetitions, q, m_dir)
 
         status = "identical" if metrics["deterministic"] else f"{metrics['n_distinct_outputs']} variants"
         print(f"  {q['id']:<4} {q['difficulty']:<7}"
               f" determinism: {status:<12}"
-              f" json_correct: {'yes' if metrics['json_correct'] else 'no':<3}"
-              f" exact_match: {'yes' if metrics['exact_filter_match'] else 'no'}")
+              f" stability: {metrics['stability'] * 100:5.1f}%"
+              f" json_correct: {metrics['json_correct_count']}/{metrics['total_reps']:<5}"
+              f" exact_match: {metrics['exact_match_count']}/{metrics['total_reps']}")
         results.append(metrics)
 
     return results, latencies
 
 
 def main():
+    #loads the config and saves the necessary parameters
     args = parse_args()
-    with open(args.config, encoding="utf-8") as f:
+    with CONFIG_PATH.open(encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
 
     models = args.models or cfg["models_phase1"]
     temperature = cfg.get("temperature_phase1", 0.0)
     reps = args.repetitions or cfg.get("repetitions_latency", 30)
 
+    #reads the questions from the jsonl
     with open(PROJECT_ROOT / cfg["paths"]["questions"], encoding="utf-8") as f:
         questions = [json.loads(line) for line in f if line.strip()]
     runs_dir = PROJECT_ROOT / cfg["paths"]["runs"]
+    results_dir = PROJECT_ROOT / cfg["paths"].get("results", "benchmark/results")
 
-    from langchain_community.chat_models import ChatOllama
     from structured_URL_generator import prompt, parser
     format_instructions = parser.get_format_instructions()
 
+    #creates the new folder
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    run_dir = runs_dir / f"{timestamp}__phase1__{args.label}"
-    run_dir.mkdir(parents=True, exist_ok=True)
+    run_name = f"{timestamp}__phase1__{args.label}"
+    run_dir = writers.create_run_dir(runs_dir, run_name)
 
-    # useful for reproducibility
-    manifest = {"phase": "phase1", "label": args.label,
-                "timestamp": timestamp, "models": models,
-                "temperature": temperature, "repetitions": reps,
-                "n_questions": len(questions), "seed": cfg.get("seed")}
+    started_at = datetime.now(timezone.utc).isoformat()
+    manifest = {
+        "phase": "phase1", "label": args.label, "run_name": run_name,
+        "timestamp": timestamp, "started_at": started_at, "finished_at": None,
+        "models": models, "temperature": temperature, "repetitions": reps,
+        "n_questions": len(questions), "config": cfg,
+    }
+    writers.write_manifest(run_dir, manifest)
 
-    (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"Models: {models}")
     print(f"Questions: {len(questions)} | repetitions: {reps} | temperature: {temperature}\n")
 
-    summary_rows = []
-    with open(run_dir / "raw_runs.jsonl", "w", encoding="utf-8") as raw_file:
-        for model in models:
-            print(f"=== MODEL: {model} ===")
-            chain = prompt | ChatOllama(model=model, temperature=temperature, format="json", num_predict=512)
-            results, latencies = run_model(chain, questions, format_instructions, reps, model, raw_file)
-            summary_rows.append(summarize_stats(model, results, latencies))
-            print()
+    summary_rows, index_rows = [], []
+    for model in models:
+        print(f" MODEL: {model} ")
+        m_dir = writers.model_dir(run_dir, model)
+        
+        #creates a chain
+        chain = prompt | build_llm("phase1", model)
 
-    with open(run_dir / "summary.csv", "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=list(summary_rows[0].keys()))
-        writer.writeheader()
-        writer.writerows(summary_rows)
+        #saves the performance of the model
+        results, latencies = run_model(chain, questions, format_instructions, reps, model, m_dir)
+        performance = summarize_stats(model, results, latencies)
+        writers.write_performance(m_dir, performance)
+
+        summary_rows.append(performance)
+        index_rows.append({"run": run_name, "timestamp": timestamp, **performance})
+        print()
+
+    #saves important info 
+    writers.write_summary_csv(run_dir, summary_rows)
+    writers.write_report_md(run_dir, run_name, summary_rows)
+    writers.append_index_csv(results_dir, index_rows)
+
+    manifest["finished_at"] = datetime.now(timezone.utc).isoformat()
+    writers.write_manifest(run_dir, manifest)
 
     print(" SUMMARY ")
     for row in summary_rows:
         print(f"  {row['model']:<26}"
               f" determinism: {row['determinism_rate'] * 100:5.1f}% "
+              f" stability: {row['stability'] * 100:5.1f}% "
               f" json_correct: {row['json_correct_rate'] * 100:5.1f}% "
               f" exact match: {row['exact_filter_match_rate'] * 100:5.1f}% "
               f" median latency: {row['median_latency']}s")
     print(f"\nResults written to --> {run_dir}")
+    print(f"Appended to        --> {results_dir / 'index.csv'}")
 
 
 if __name__ == "__main__":
