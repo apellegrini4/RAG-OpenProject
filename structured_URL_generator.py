@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
+from llm_builder import build_llm
 
 #definition of the JSON structure that the LLM should return
 class QueryParams(BaseModel):
@@ -61,7 +62,7 @@ parser = JsonOutputParser(pydantic_object=QueryParams)
 prompt = ChatPromptTemplate.from_template(template)
 
 def define_urlConstructor_chain(model_name):
-    llm = ChatOllama(model=model_name, temperature=0, format="json")
+    llm = build_llm("phase1", model_name)
     chain = prompt | llm | parser
 
     return chain

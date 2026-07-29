@@ -2,6 +2,7 @@ import json
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from llm_builder import build_llm
 
 #I don't need the generation of 5 different queries anymore
 template = '''You are a professional AI language model assistant. 
@@ -26,7 +27,7 @@ parser = StrOutputParser()
 prompt = ChatPromptTemplate.from_template(template)
 
 def define_response_chain(model_name):
-    llm = ChatOllama(model=model_name, temperature=0.6)
+    llm = build_llm("phase2", model_name)
     chain = (   prompt 
             |   llm 
             |   parser 
