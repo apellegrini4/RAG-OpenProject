@@ -46,39 +46,87 @@ def count_distinct(items) -> int:
     return len(distinct)
 
 
+def stability(items) -> float:
+    """finds the response with more repetitions """
+    if not items:
+        return 0.0
+
+    count_distinct = []
+    for item in items:
+        key = {k: v for k, v in item.items() if k != "reasoning"} if isinstance(item, dict) else item
+
+        for c in count_distinct:
+            if c[0] == key:
+                c[1] += 1
+                break
+        else:
+            count_distinct.append([key, 1])
+
+    most_frequent_response = max(c[1] for c in count_distinct)
+    return most_frequent_response / len(items)
+
+
+def failure_reason(parsed, real: dict):
+    """ describes the failure reason of a response, given 3 type of errors"""
+    if parsed is None:
+        return "parse_error"
+    if not schema_validation(parsed):
+        return "schema_invalid"
+    if not exact_filter_match(parsed, real):
+        return "exact_mismatch"
+    return None
+
+
 def evaluate_question(parsed_outputs: list, real: dict) -> dict:
     """ phase-1 metrics, the first output is kept as the representative extraction """
-    # to do: (F1, precision, recall)
 
     first_out = parsed_outputs[0]
     n_distinct = count_distinct(parsed_outputs)
     deterministic = (n_distinct == 1) and (first_out is not None)
-    json_correct = schema_validation(first_out)
-    exact_match = exact_filter_match(first_out, real) if json_correct else False
+
+    total_reps = len(parsed_outputs)
+    json_correct_count = 0
+    exact_match_count = 0
+
+    for out in parsed_outputs:
+        if schema_validation(out):
+            json_correct_count += 1
+            if exact_filter_match(out, real):
+                exact_match_count += 1
 
     return {
         "deterministic": deterministic,
         "n_distinct_outputs": n_distinct,
-        "json_correct": json_correct,
-        "exact_filter_match": exact_match,
-        "first_output": first_out,
+        "json_correct_count": json_correct_count,
+        "exact_match_count": exact_match_count,
+        "total_reps": total_reps,
+        "stability": round(stability(parsed_outputs), 3),
+        "first_output": first_out
     }
 
 
 def summarize_stats(model: str, question_results: list, latencies: list) -> dict:
-    """ aggregates results for a singol model """
+    """ aggregates results for a single model """
     n = len(question_results)
 
-    det_count = match_count = schema_count = 0
+    det_count = 0
+    total_json_correct = 0
+    total_exact_filter = 0
+    total_reps = 0
+    stabilities = []
+
     for r in question_results:
         det_count += r["deterministic"]
-        match_count += r["exact_filter_match"]
-        schema_count += r["json_correct"]
+        total_json_correct += r.get("json_correct_count", 0)
+        total_exact_filter += r.get("exact_match_count", 0)
+        total_reps += r.get("total_reps", 1)
+        stabilities.append(r.get("stability", 0.0))
 
     return {
         "model": model,
         "determinism_rate": round(det_count / n, 3) if n else 0.0,
-        "json_correct_rate": round(schema_count / n, 3) if n else 0.0,
-        "exact_filter_match_rate": round(match_count / n, 3) if n else 0.0,
+        "json_correct_rate": round(total_json_correct / total_reps, 3) if total_reps else 0.0,
+        "exact_filter_match_rate": round(total_exact_filter / total_reps, 3) if total_reps else 0.0,
+        "stability": round(sum(stabilities) / len(stabilities), 3) if stabilities else 0.0,
         "median_latency": round(median(latencies), 3) if latencies else None,
     }
