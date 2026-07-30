@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import json
-from structured_URL_generator import parser, build_OP_URL, define_urlConstructor_chain, fetch_openproject_data
+from structured_URL_generator import (
+parser, define_urlConstructor_chain, fetch_openproject_data,
+    build_read_request, build_create_request, build_update_request, safe_write,
+    project_patch, workpack_patch,
+)
 from response_generator import define_response_chain
 from json_pruning import clean_and_remodel_json
 
@@ -14,6 +18,45 @@ class requestStructure(BaseModel):
     question: str
     model_name: str
 
+
+def intent_identifier(json_data):
+    """ builds the right request based on the intent extracted by the model. The schema's default intent is read """
+    intent = json_data.get('intent') if isinstance(json_data, dict) else None
+
+    if intent == 'read' or intent is None:
+        return build_read_request(json_data)
+    if intent == 'create':
+        return build_create_request(json_data)
+    if intent == 'update':
+        return build_update_request(json_data)
+
+    return f"System Info: unknown intent '{intent}'"
+
+
+def execute(json_data):
+    """ identifies the intent and excecute it"""
+    request = intent_identifier(json_data)
+
+    #if it's a string it means that it's a System Info
+    if isinstance(request, str):
+        return request
+
+    #if the request is a get and there isn't a patch target field, it means that the intent is a read
+    if request["method"] == "GET" and "patch_target" not in request:
+        data = fetch_openproject_data(request["url"])
+        return clean_and_remodel_json(data)
+
+    #if there is a patch_target it means that the intent is an update (read then write)
+    if "patch_target" in request:
+        get_response = fetch_openproject_data(request["url"])
+        patch_function = project_patch if request["patch_target"] == "project" else workpack_patch
+        patch_request = patch_function(get_response, request["payload"], request["url"])
+        return safe_write(patch_request)
+
+    #the inten is a creation (a simple write)
+    return safe_write(request)
+
+
 @app.post("/ask")
 async def ask_agent(request: requestStructure):
     start_time = time.time() #saves the time at the beginning of the request
@@ -23,17 +66,14 @@ async def ask_agent(request: requestStructure):
         url_constructur_chain = define_urlConstructor_chain(request.model_name)
         response_chain = define_response_chain(request.model_name)
 
-        user_query = f"{request.question} (Note: the user asking is {request.username})"
+        user_query = f"{request.question} (Note: the user asking is {request.username})" #andrà tolto
 
         json_params = url_constructur_chain.invoke({"format_instructions": parser.get_format_instructions(),
                                     "user_query": user_query})
         
-        url = build_OP_URL(json_params)
-
         with open("tests/stress_test.json", "r") as f:
             final_data = json.load(f)
-        # data = fetch_openproject_data(url)
-        # final_data = clean_and_remodel_json(data)
+        # final_data = execute(json_params)
 
         if isinstance(final_data, dict): #check to see if there are data, in fact it may also be a string with the error
             total = final_data.get('total_results', 0)
