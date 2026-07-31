@@ -2,7 +2,7 @@ import os
 import re
 import requests
 from dotenv import load_dotenv
-from structural_validation import normalize_value
+from structural_validation import normalize_value, DATE_FIELDS, ISO_DATE_RE
 
 load_dotenv()
 api_key = os.getenv('OP_API_KEY')
@@ -127,6 +127,20 @@ def workpack_body_builder(payload):
 
         value = val_list[0]
 
+        #author and percentageDone are not writable, only readable
+        if key in ('author', 'percentageDone'):
+            missing_entities.append(f"'{key}' is not a writable field")
+            continue
+
+        #startDate/dueDate go in the root as "YYYY-MM-DD", always explicit (never 'today'/'this week')
+        if key in DATE_FIELDS:
+            clean_date = str(value).strip()
+            if not ISO_DATE_RE.match(clean_date):
+                missing_entities.append(f"'{key}': '{value}' is not a valid YYYY-MM-DD date")
+            else:
+                body[key] = clean_date
+            continue
+
         #some fields need an href with the corrisponding ID, that means they need to be mapped
         if key in LINK_FIELDS:
             id_map = create_ID_map(key)
@@ -138,12 +152,6 @@ def workpack_body_builder(payload):
 
         elif key == 'description':
             body['description'] = {"format": "markdown", "raw": str(value)}
-
-        elif key == 'percentageDone':
-            try:
-                body['percentageDone'] = int(value)
-            except (TypeError, ValueError):
-                missing_entities.append(f"'value: {value}' is not a valid percentageDone")
 
         elif key == 'subject':
             body['subject'] = str(value)
@@ -167,8 +175,13 @@ def project_body_builder(payload):
 
         if key in ('active', 'public'):
             body[key] = normalize_value(value) in ('t', 'true', '1')
+
         elif key == 'name':
             body['name'] = str(value)
+
+        elif key == 'description':
+            body['description'] = {"format": "markdown", "raw": str(value)}
+            
         else:
             #unknown field or field not supported in this project
             missing_entities.append(f"unrecognized field '{key}'")

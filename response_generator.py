@@ -1,7 +1,7 @@
 import json
-from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+
 from llm_builder import build_llm
 
 #I don't need the generation of 5 different queries anymore

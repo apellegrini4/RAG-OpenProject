@@ -8,6 +8,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from structural_validation import normalize_value, schema_validation
 
+
 def filter_pairs_set(filters) -> set:
     """ returns the set of (key, normalized_value) pairs found in filters dictionary """
     pairs_set = set()
@@ -80,13 +81,15 @@ def stability(items) -> float:
 
 
 def failure_reason(parsed, real: dict):
-    """ describes the failure reason of a response, given 3 type of errors"""
+    """ describes the failure reason of a response, given 4 type of errors """
     if parsed is None:
         return "parse_error"
     if not schema_validation(parsed):
         return "schema_invalid"
     if not exact_filter_match(parsed, real):
-        return "exact_mismatch"
+        return "filter_mismatch"
+    if not exact_payload_match(parsed, real):
+        return "payload_mismatch"
     return None
 
 

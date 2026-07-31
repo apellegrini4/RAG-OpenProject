@@ -34,7 +34,18 @@ def parse_args():
     ap.add_argument("--models", nargs="*", default=None,
                     help="override the model list from config (space separated)")
     ap.add_argument("--label", default="demo")
+    ap.add_argument("--difficulty", choices=["easy", "medium", "hard"], default=None,
+                    help="filter the dataset to only this difficulty level (default: all)")
+    ap.add_argument("--questions", default=None,
+                    help="override the questions.jsonl path from config.yaml (useful for trial runs)")
     return ap.parse_args()
+
+def strip_reasoning(parsed):
+    """ removes the reasoning from the answer to obtain a cleaner answers file"""
+    if not isinstance(parsed, dict):
+        return parsed
+    return {k: v for k, v in parsed.items() if k != "reasoning"}
+
 
 def save_results(repetitions, q, m_dir):
     """ writes the resultes in separated folders"""
@@ -42,10 +53,11 @@ def save_results(repetitions, q, m_dir):
 
     for i, rep in enumerate(repetitions):
         parsed = rep["parsed"]
-        #divides in 2 different files the answer (with the metrics) and corrispective reasoning 
+        parsed_clean = strip_reasoning(parsed)
+
         answers_rows.append({
             "question_id": q["id"], "repetition": i,
-            "parsed": parsed,
+            "parsed": parsed_clean,
             "json_correct": schema_validation(parsed),
             "exact_match": schema_validation(parsed) and exact_filter_match(parsed, q),
             "latency": rep["latency"], "error": rep["error"],
@@ -55,13 +67,17 @@ def save_results(repetitions, q, m_dir):
             "reasoning": parsed.get("reasoning") if isinstance(parsed, dict) else None,
         })
 
-        #saves model raw answers only in case of failure
         reason = failure_reason(parsed, q)
         if reason is not None:
-            failure_rows.append({
+            failure_row = {
                 "question_id": q["id"], "repetition": i,
-                "failure_reason": reason, "error": rep["error"], "raw": rep["raw"],
-            })
+                "failure_reason": reason, "error": rep["error"],
+            }
+            if reason in ("filter_mismatch", "payload_mismatch"):
+                failure_row["parsed"] = parsed_clean
+            else:
+                failure_row["raw"] = rep["raw"]
+            failure_rows.append(failure_row)
 
     #writes the info
     writers.write_answers(m_dir, answers_rows)
@@ -107,7 +123,9 @@ def run_model(chain, questions, format_instructions, reps, model, m_dir):
               f" determinism: {status:<12}"
               f" stability: {metrics['stability'] * 100:5.1f}%"
               f" json_correct: {metrics['json_correct_count']}/{metrics['total_reps']:<5}"
-              f" exact_match: {metrics['exact_match_count']}/{metrics['total_reps']}")
+              f" intent: {metrics['intent_correct_count']}/{metrics['total_reps']:<5}"
+              f" filters: {metrics['filter_correct_count']}/{metrics['total_reps']:<5}"
+              f" payload: {metrics['payload_correct_count']}/{metrics['total_reps']}")
         results.append(metrics)
 
     return results, latencies
@@ -123,9 +141,14 @@ def main():
     temperature = cfg.get("temperature_phase1", 0.0)
     reps = args.repetitions or cfg.get("repetitions_latency", 30)
 
-    #reads the questions from the jsonl
-    with open(PROJECT_ROOT / cfg["paths"]["questions"], encoding="utf-8") as f:
+    #reads the questions from the jsonl (single file, filtered by --difficulty at load time)
+    questions_path = Path(args.questions) if args.questions else PROJECT_ROOT / cfg["paths"]["questions"]
+    with open(questions_path, encoding="utf-8") as f:
         questions = [json.loads(line) for line in f if line.strip()]
+    
+    #takes only the questions for the specified difficulty
+    if args.difficulty:
+        questions = [q for q in questions if q.get("difficulty") == args.difficulty]
     runs_dir = PROJECT_ROOT / cfg["paths"]["runs"]
     results_dir = PROJECT_ROOT / cfg["paths"].get("results", "benchmark/results")
 
@@ -142,6 +165,7 @@ def main():
         "phase": "phase1", "label": args.label, "run_name": run_name,
         "timestamp": timestamp, "started_at": started_at, "finished_at": None,
         "models": models, "temperature": temperature, "repetitions": reps,
+        "difficulty": args.difficulty, "questions_path": str(questions_path),
         "n_questions": len(questions), "config": cfg,
     }
     writers.write_manifest(run_dir, manifest)
@@ -176,11 +200,16 @@ def main():
 
     print(" SUMMARY ")
     for row in summary_rows:
+        unsafe = row.get("unsafe_action_rate")
+        unsafe_str = f"{unsafe * 100:5.1f}%" if unsafe is not None else "   n/a"
         print(f"  {row['model']:<26}"
+              f" intent: {row['intent_accuracy'] * 100:5.1f}% "
+              f" filters: {row['exact_filter_match_rate'] * 100:5.1f}% "
+              f" payload: {row['exact_payload_match_rate'] * 100:5.1f}% "
+              f" unsafe: {unsafe_str} "
               f" determinism: {row['determinism_rate'] * 100:5.1f}% "
               f" stability: {row['stability'] * 100:5.1f}% "
               f" json_correct: {row['json_correct_rate'] * 100:5.1f}% "
-              f" exact match: {row['exact_filter_match_rate'] * 100:5.1f}% "
               f" median latency: {row['median_latency']}s")
     print(f"\nResults written to --> {run_dir}")
     print(f"Appended to        --> {results_dir / 'index.csv'}")

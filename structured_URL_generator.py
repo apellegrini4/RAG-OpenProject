@@ -5,11 +5,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
 from llm_builder import build_llm
-from structural_validation import normalize_value, schema_validation
+from structural_validation import normalize_value, schema_validation, resolve_date_filter, DATE_FIELDS
 from request_helpers import (
     API_V3, api_key,
     create_ID_map, validate_project_selector, validate_workpack_selector,
     workpack_body_builder, project_body_builder,
+    project_patch, workpack_patch,
     safe_write
 )
 
@@ -19,10 +20,10 @@ class QueryParams(BaseModel):
     intent: str = Field(description="Must be exactly 'read', 'create', or 'update'. Defaults to 'read' if the user is just asking a question.")
     macro_section: str = Field(description="Must be exactly 'projects' or 'work_packages', or 'not_allowed' if out of scope.")
     filters: dict = Field(description="For 'read': the search parameters. For 'update': ONLY the selector of the target item (its 'id'). Empty for 'create'. IMPORTANT: every value inside this dictionary MUST be a list, even if there is only one element.",
-                          examples=[{'priority': ['Low', 'High']}, {'active': ['t']}, {'assignee': ['Alba']}])
+                          examples=[{'priority': ['Low', 'High']}, {'active': ['t']}, {'assignee': ['Alba']}, {'dueDate': ['today']}])
     payload: dict = Field(default_factory=dict,
                           description="For 'create'/'update': the fields of the item to write. Empty ({}) for 'read'. IMPORTANT: every value inside this dictionary MUST be a list, even if there is only one element.",
-                          examples=[{'subject': ['Login error'], 'priority': ['High']}])
+                          examples=[{'subject': ['Login error'], 'priority': ['High'], 'dueDate': ['2026-09-15']}])
 
 #structured template that uses the Chain of Thought
 template = """You are an API semantic extractor.
@@ -61,7 +62,22 @@ ALLOWED FILTERS FOR 'work_packages':
 - 'type': The type of work package (e.g., 'Milestone', 'Task', 'Bug', 'Feature'), use ALWAYS the singular
 - 'version': The specific backlog, sprint, or phase it belongs to
 - 'project': The name of the specific project these tasks belong to (e.g., 'Alpha', 'Data Migration')
-- 'percentageDone': The completion percentage (e.g., '0', '50', '100')
+- 'percentageDone': The completion percentage (e.g., '0', '50', '100') -- READ ONLY, see below
+- 'startDate': The date the task should start (work packages only). See DATE VALUES below.
+- 'dueDate': The deadline of the task (work packages only). See DATE VALUES below.
+
+DATE VALUES (for 'startDate'/'dueDate' filters ONLY): use exactly one of these forms, never invent or calculate a date yourself:
+- one explicit date -> one-element list, e.g. ["2026-09-15"]
+- a date range -> two-element list [start, end], e.g. ["2026-09-01", "2026-09-30"]
+- the keyword 'today' -> ["today"]
+- the keyword 'this week' -> ["this week"]
+Dates are always written as YYYY-MM-DD. If the user says "today" or "this week", output that exact keyword as the value, NOT a computed date.
+
+WRITABLE FIELDS FOR 'payload' ON 'work_packages' (create/update ONLY): 'subject', 'description', 'startDate', 'dueDate', 'type', 'project', 'priority', 'status', 'version', 'assignee'.
+- 'startDate'/'dueDate' in a payload are ALWAYS an explicit date "YYYY-MM-DD" — never 'today' or 'this week' (those are read-only keywords).
+- 'author' and 'percentageDone' are NEVER writable: they must NEVER appear inside 'payload', under any circumstance. They can only be used inside 'filters' to search.
+
+WRITABLE FIELDS FOR 'payload' ON 'projects' (create/update ONLY): 'name' (REQUIRED to create a project), 'active', 'public', 'description'.
 
 CRITICAL RULE FOR MULTIPLE VALUES:
 If the user asks for multiple values for the same filter (e.g., "Urgent tasks" might mean both "High" and "Immediate" priority), you MUST include all of them in a list.
@@ -72,12 +88,16 @@ User: "Find urgent milestones assigned to Alba in the Alpha project"
 Output: {{"reasoning": "The user wants work packages. 'urgent' means priority High and Immediate. 'milestone' is the type. 'Alba' is the assignee. 'Alpha' is the project.", "intent": "read", "macro_section": "work_packages", "filters": {{"type": ["Milestone"], "priority": ["Immediate", "High"], "assignee": ["Alba"], "project": ["Alpha"]}}, "payload": {{}}}}
 
 EXAMPLE 2 (create):
-User: "Create a new bug in the Mobile App project, titled 'Login error', assign it to Mario Rossi with High priority"
-Output: {{"reasoning": "The user wants to create a new work package. Type is Bug, project is Mobile App, subject is 'Login error', assignee is Mario Rossi, priority is High.", "intent": "create", "macro_section": "work_packages", "filters": {{}}, "payload": {{"project": ["Mobile App"], "type": ["Bug"], "subject": ["Login error"], "assignee": ["Mario Rossi"], "priority": ["High"]}}}}
+User: "Create a new bug in the Mobile App project, titled 'Login error', assign it to Mario Rossi with High priority, due September 15, 2026"
+Output: {{"reasoning": "The user wants to create a new work package. Type is Bug, project is Mobile App, subject is 'Login error', assignee is Mario Rossi, priority is High, dueDate is an explicit date normalized to YYYY-MM-DD.", "intent": "create", "macro_section": "work_packages", "filters": {{}}, "payload": {{"project": ["Mobile App"], "type": ["Bug"], "subject": ["Login error"], "assignee": ["Mario Rossi"], "priority": ["High"], "dueDate": ["2026-09-15"]}}}}
 
 EXAMPLE 3 (update):
 User: "Mark task 321 as Closed"
 Output: {{"reasoning": "The user wants to modify an existing work package identified by id 321, setting its status to Closed.", "intent": "update", "macro_section": "work_packages", "filters": {{"id": ["321"]}}, "payload": {{"status": ["Closed"]}}}}
+
+EXAMPLE 4 (read, date keyword):
+User: "Which work packages are due today?"
+Output: {{"reasoning": "The user wants work packages whose dueDate is today. 'today' is a keyword resolved by the API, not a date to compute.", "intent": "read", "macro_section": "work_packages", "filters": {{"dueDate": ["today"]}}, "payload": {{}}}}
 
 {format_instructions}
 
@@ -142,6 +162,15 @@ def build_read_request(json_data) -> dict:
                 operator_code = "o" if is_open else "c"
                 op_filters.append({key: {"operator": operator_code, "values": []}})
                 continue
+
+        #rule for date filters (startDate/dueDate): operator deduced from the shape of the list
+        if key in DATE_FIELDS:
+            operator_code, mapped_dates, date_error = resolve_date_filter(val_list)
+            if date_error:
+                missing_entities.append(f"'{key}': {date_error}")
+                continue
+            op_filters.append({key: {"operator": operator_code, "values": mapped_dates}})
+            continue
 
         if key in f_need_map:
             dict_f = create_ID_map(key) #creates the dictionary only if it's needed
@@ -211,7 +240,10 @@ def build_create_request(json_data) -> dict:
         return "System Info: no fields provided to create the item."
 
     if macro_section == 'projects':
-        body = project_body_builder(payload)
+        body, missing_entities = project_body_builder(payload)
+        if missing_entities:
+            errors = ", ".join(missing_entities)
+            return f"System Info: these entities requested by the user do not exist. {errors}."
         if 'name' not in body:
             return "System Info: a project name is required to create a project."
         return {"method": "POST", "url": f"{API_V3}projects", "body": body}
@@ -233,7 +265,7 @@ def build_create_request(json_data) -> dict:
         errors = ", ".join(missing_entities)
         return f"System Info: these entities requested by the user do not exist. {errors}."
 
-    url = f"{API_V3}projects/{project_id}/work_packages"
+    url = f"{API_V3}workspaces/{project_id}/work_packages"
     return {"method": "POST", "url": url, "body": body}
 
 
