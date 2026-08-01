@@ -6,17 +6,17 @@ models_phase2: ["llama3.2:3b", "qwen2.5:3b", "gemma3:4b", "phi4-mini-reasoning"]
 temperature_phase1: 0.0
 temperature_phase2: 0.6
 
-
 seed: 42
 repetitions_latency: 30
-repeat_penalty: 1.0
 
 #max tokens generated per call
 num_predict: 512
+#disables the repetition penalty
+repeat_penalty: 1.0 
 
 #paths
 paths:
-  questions: "benchmark/dataset/questions.jsonl"
+  questions: "benchmark/dataset/questions_90.jsonl"
   mock_data: "benchmark/dataset/mock_data"
   runs: "benchmark/runs"
   results: "benchmark/results"
