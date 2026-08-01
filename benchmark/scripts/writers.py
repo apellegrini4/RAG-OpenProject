@@ -10,6 +10,10 @@ class RunExistsError(RuntimeError):
     """ raised when a run directory already exists (writers never overwrite silently) """
 
 
+class IndexSchemaError(RuntimeError):
+    """ raised when the new rows do not have the same columns as the existing index.csv """
+
+
 def validate_name(model_name: str) -> str:
     """ turns the name of the model into a valid folder name """
     return "".join("_" if char in INVALID_CHAR else char for char in model_name)
@@ -96,15 +100,26 @@ def write_report_md(run_dir, run_name: str, rows: list):
 
 def append_index_csv(results_dir, rows: list):
     """ appends to the single append-only benchmark/results/index.csv """
-    results_dir = Path(results_dir)
     if not rows:
         return
+
+    results_dir = Path(results_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
     path = results_dir / "index.csv"
+    fieldnames = list(rows[0].keys())
     file_exists = path.exists()
 
+    #throws an error if a new metric is added without changing 'index.csv' file, avoids value misaligning
+    if file_exists:
+        with open(path, newline="", encoding="utf-8") as f:
+            existing = next(csv.reader(f), [])
+        if existing and existing != fieldnames:
+            raise IndexSchemaError(
+                f"{path} has columns {existing}, the new rows have {fieldnames}. "
+                f"Archive the old file (rename it) instead of appending to it.")
+
     with open(path, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
         if not file_exists:
             writer.writeheader()
         writer.writerows(rows)

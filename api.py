@@ -41,19 +41,19 @@ def execute(json_data):
     if isinstance(request, str):
         return request
 
-    #if the request is a get and there isn't a patch target field, it means that the intent is a read
-    if request["method"] == "GET" and "patch_target" not in request:
-        data = fetch_openproject_data(request["url"])
-        return clean_and_remodel_json(data)
-
-    #if there is a patch_target it means that the intent is an update (read then write)
+    #a patch_target means the intent is an update (read then write, the PATCH needs the lockVersion)
     if "patch_target" in request:
         get_response = fetch_openproject_data(request["url"])
         patch_function = project_patch if request["patch_target"] == "project" else workpack_patch
         patch_request = patch_function(get_response, request["payload"], request["url"])
         return safe_write(patch_request)
 
-    #the inten is a creation (a simple write)
+    #a GET without a patch_target is a read
+    if request["method"] == "GET":
+        data = fetch_openproject_data(request["url"])
+        return clean_and_remodel_json(data)
+
+    #the intent is a creation (a simple write)
     return safe_write(request)
 
 
@@ -75,12 +75,14 @@ async def ask_agent(request: requestStructure):
             final_data = json.load(f)
         # final_data = execute(json_params)
 
-        if isinstance(final_data, dict): #check to see if there are data, in fact it may also be a string with the error
+        #a read returns a dictionary, a failure returns a plain "System Info" string
+        if isinstance(final_data, dict):
             total = final_data.get('total_results', 0)
             page = final_data.get('number_of_results_in_the_page', 0)
-            if total > page: final_data['pagination_warning'] = f"I found {total} results but I'm only showing you the {page} recent ones."
 
-        if isinstance(final_data, dict) or isinstance(final_data, list):
+            if total > page:
+                final_data['pagination_warning'] = f"I found {total} results but I'm only showing you the {page} recent ones."
+
             json_data = json.dumps(final_data, indent=2)
         else:
             json_data = str(final_data)
@@ -98,4 +100,4 @@ async def ask_agent(request: requestStructure):
         }
 
     except Exception as e:
-        return e
+        return f"System Info: the request could not be completed, error: {e}"

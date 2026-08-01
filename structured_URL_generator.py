@@ -18,7 +18,7 @@ from request_helpers import (
 class QueryParams(BaseModel):
     reasoning: str = Field(description="identify the intent, the macro-section, and the relevant filters/payload BEFORE answering.")
     intent: str = Field(description="Must be exactly 'read', 'create', or 'update'. Defaults to 'read' if the user is just asking a question.")
-    macro_section: str = Field(description="Must be exactly 'projects' or 'work_packages', or 'not_allowed' if out of scope.")
+    macro_section: str = Field(description="Must be exactly 'projects' or 'work_packages', or 'out_of_scope' if out of scope.")
     filters: dict = Field(description="For 'read': the search parameters. For 'update': ONLY the selector of the target item (its 'id'). Empty for 'create'. IMPORTANT: every value inside this dictionary MUST be a list, even if there is only one element.",
                           examples=[{'priority': ['Low', 'High']}, {'active': ['t']}, {'assignee': ['Alba']}, {'dueDate': ['today']}])
     payload: dict = Field(default_factory=dict,
@@ -38,7 +38,12 @@ INTENT: Decide what the user wants to do
 ALLOWED MACRO-SECTIONS: 'projects' or 'work_packages'
 CRITICAL SECTION DISAMBIGUATION: If the query asks for tasks, bugs, milestones, features, or priorities INSIDE a project, the macro-section is ALWAYS 'work_packages'.
 Use 'projects' ONLY when searching for the projects themselves.
-IF the macro-section that you find is NOT allowed USE 'not_allowed'.
+
+WHEN TO USE 'out_of_scope': a request is in scope ONLY if it reads, creates or updates projects or work packages using the fields listed below. Run these three checks; if ANY of them fails, set macro_section to 'out_of_scope', intent to 'read', and leave BOTH 'filters' and 'payload' empty ({{}}).
+1. ENTITY: is it about projects or work packages? If it's not explicit than it's NOT.
+2. ACTION: is it a read, a create or an update? Deleting, removing, copying, exporting or scheduling are NOT.
+3. FIELD: is every field it mentions present in the lists below?
+Naming a project or saying 'work package' does NOT put a request in scope: "Delete work package 15" fails check 2, "Show the custom fields of the work packages" fails check 1.
 
 FILTERS vs PAYLOAD: They are never both non-empty
 - For 'read': 'filters' holds the search parameters, 'payload' is an empty object {{}}.
@@ -58,7 +63,6 @@ ALLOWED FILTERS FOR 'work_packages':
 - 'status': The specific status or phase mentioned (e.g., 'Closed', 'New', 'Confirmed'). Extract the exact concept.
 - 'id': Specific number ID of the task
 - 'subject': Text to search in the title
-- 'description': Free text description of the task (create, update only)
 - 'type': The type of work package (e.g., 'Milestone', 'Task', 'Bug', 'Feature'), use ALWAYS the singular
 - 'version': The specific backlog, sprint, or phase it belongs to
 - 'project': The name of the specific project these tasks belong to (e.g., 'Alpha', 'Data Migration')
@@ -99,6 +103,10 @@ EXAMPLE 4 (read, date keyword):
 User: "Which work packages are due today?"
 Output: {{"reasoning": "The user wants work packages whose dueDate is today. 'today' is a keyword resolved by the API, not a date to compute.", "intent": "read", "macro_section": "work_packages", "filters": {{"dueDate": ["today"]}}, "payload": {{}}}}
 
+EXAMPLE 5 (out of scope):
+User: "Delete work package 15"
+Output: {{"reasoning": "It names a work package, but deleting is not one of the supported actions (read, create, update), so check 2 fails and the request is out of scope.", "intent": "read", "macro_section": "out_of_scope", "filters": {{}}, "payload": {{}}}}
+
 {format_instructions}
 
 User query: {user_query}
@@ -125,8 +133,8 @@ def build_read_request(json_data) -> dict:
         return "System Info: query failed, data shape not valid"
 
     #checks if macro_section is a valid possibility
-    macro_sect = json_data.get('macro_section')
-    if macro_sect == 'not_allowed':
+    macro_sect = json_data['macro_section']
+    if macro_sect == 'out_of_scope':
         return 'Operation not allowed, query out of domain'
     if macro_sect not in ALLOWED_MACRO_SECTIONS:
         return f"System Info: unknown macro-section '{macro_sect}'."
@@ -135,7 +143,7 @@ def build_read_request(json_data) -> dict:
     base_url = API_V3 + f'{macro_sect}'
 
     #extracts the filters
-    filters = json_data.get('filters', {})
+    filters = json_data['filters']
 
     #creates a dictionary only if the filter needs it (some filters need to be searched by their corresponding ID)
     f_need_map = ['author', 'assignee', 'priority', 'status', 'type', 'version', 'project']
@@ -146,7 +154,6 @@ def build_read_request(json_data) -> dict:
     for key, val_list in filters.items():
         mapped_values = []
         operator = '='
-        op_key = key #the name of the filter to put in the query
 
         #rule for open and closed statuses, it manages the case and then goes on with the next filter
         if key == 'status':
@@ -201,9 +208,8 @@ def build_read_request(json_data) -> dict:
                 else:
                     mapped_values.append(normalize_value(v))
 
-        if mapped_values: #if the list is not empty
-            final_part_url = {op_key: {"operator": operator, "values": mapped_values}}
-            op_filters.append(final_part_url)
+        if mapped_values: #if the list is not empty appends the final part of the url containing the operator and the corrisponding values
+            op_filters.append({key: {"operator": operator, "values": mapped_values}})
 
     #if there's at least ONE error it interrupts the creation of the filter
     if missing_entities:
@@ -229,13 +235,13 @@ def build_create_request(json_data) -> dict:
         return "System Info: create failed, malformed extraction."
 
     #checks if macro_section is a valid possibility
-    macro_section = json_data.get('macro_section')
-    if macro_section == 'not_allowed':
+    macro_section = json_data['macro_section']
+    if macro_section == 'out_of_scope':
         return 'Operation not allowed, query out of domain'
     if macro_section not in ALLOWED_MACRO_SECTIONS:
         return "System Info: create is only supported for projects or work packages."
 
-    payload = json_data.get('payload', {})
+    payload = json_data['payload']
     if not payload:
         return "System Info: no fields provided to create the item."
 
@@ -278,14 +284,14 @@ def build_update_request(json_data) -> dict:
         return "System Info: update failed, malformed extraction."
 
     #checks if macro_section is a valid possibility
-    macro_section = json_data.get('macro_section')
-    if macro_section == 'not_allowed':
+    macro_section = json_data['macro_section']
+    if macro_section == 'out_of_scope':
         return 'Operation not allowed, query out of domain'
     if macro_section not in ALLOWED_MACRO_SECTIONS:
         return "System Info: update is only supported for projects or work packages."
 
-    selector = json_data.get('filters', {})
-    payload = json_data.get('payload', {})
+    selector = json_data['filters']
+    payload = json_data['payload']
     if not payload:
         return "System Info: no fields provided to update"
 
@@ -299,7 +305,7 @@ def build_update_request(json_data) -> dict:
                 "patch_target": "project", "payload": payload}
 
     #macro_section is type work_packages and requires an id
-    wp_id, error = validate_workpack_selector(selector, "work package")
+    wp_id, error = validate_workpack_selector(selector)
     if error:
         return error
     get_url = f"{API_V3}work_packages/{wp_id}"
@@ -308,11 +314,8 @@ def build_update_request(json_data) -> dict:
             "patch_target": "work_package", "payload": payload}
 
 
-#function that does the actual request
+#function that does the actual request (it is only reached with a real url)
 def fetch_openproject_data(final_url):
-    if final_url.startswith("System Info"):
-        return final_url
-
     try:
         response = requests.get(final_url, auth=('apikey', api_key))
         response.raise_for_status() #to check for example the case of invalid filter values
@@ -323,7 +326,7 @@ def fetch_openproject_data(final_url):
 
         return data
 
-    except requests.exceptions.HTTPError as err:
+    except requests.exceptions.HTTPError:
         if response.status_code == 400:
             return "System Info: invalid parameters or unsufficient permissions"
         else:

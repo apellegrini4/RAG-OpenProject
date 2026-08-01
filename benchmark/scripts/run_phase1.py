@@ -54,12 +54,13 @@ def save_results(repetitions, q, m_dir):
     for i, rep in enumerate(repetitions):
         parsed = rep["parsed"]
         parsed_clean = strip_reasoning(parsed)
+        json_correct = schema_validation(parsed)
 
         answers_rows.append({
             "question_id": q["id"], "repetition": i,
             "parsed": parsed_clean,
-            "json_correct": schema_validation(parsed),
-            "exact_match": schema_validation(parsed) and exact_filter_match(parsed, q),
+            "json_correct": json_correct,
+            "exact_match": json_correct and exact_filter_match(parsed, q),
             "latency": rep["latency"], "error": rep["error"],
         })
         reasoning_rows.append({
@@ -187,7 +188,8 @@ def main():
         writers.write_performance(m_dir, performance)
 
         summary_rows.append(performance)
-        index_rows.append({"run": run_name, "timestamp": timestamp, **performance})
+        index_rows.append({"run": run_name, "timestamp": timestamp,
+                            "difficulty": args.difficulty or "all", **performance})
         print()
 
     #saves important info 
@@ -210,7 +212,7 @@ def main():
               f" determinism: {row['determinism_rate'] * 100:5.1f}% "
               f" stability: {row['stability'] * 100:5.1f}% "
               f" json_correct: {row['json_correct_rate'] * 100:5.1f}% "
-              f" median latency: {row['median_latency']}s")
+              f" latency: median, p90 --> {row['median_latency']}s , {row['p90_latency']}s")
     print(f"\nResults written to --> {run_dir}")
     print(f"Appended to        --> {results_dir / 'index.csv'}")
 

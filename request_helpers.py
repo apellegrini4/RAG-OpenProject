@@ -83,35 +83,29 @@ def create_ID_map(filter_name):
 #an extension of create_ID_map, specific to resolve the project selector for the intent 'update'
 def validate_project_selector(selector):
     """ project can be found by id or by a name (fetching the corrisponding ID)"""
-    if not isinstance(selector, dict):
-        selector = {}
-
     #the user provided an ID
-    if 'id' in selector:
-        val = selector['id']
-        return val[0], None
+    if selector.get('id'):
+        return selector['id'][0], None
 
     #the user provided a name
-    if 'name' in selector:
-        val = selector['name']
-        val = val[0]
+    if selector.get('name'):
+        name = selector['name'][0]
 
         #finds the corrisponding ID (if the project exists)
         project_map = create_ID_map('project')
         project_id = project_map.get(normalize_value(val))
         if project_id is None:
-            return None, f"System Info: project '{val}' does not exist."
+            return None, f"System Info: project '{name}' does not exist."
         return project_id, None
 
     return None, "System Info: update currently requires a project 'id' or 'name' selector."
 
-def validate_workpack_selector(selector, entity_label):
+def validate_workpack_selector(selector):
     """ checks if the user provided a valid ID to find the corrisponding work package """
-    if not isinstance(selector, dict) or 'id' not in selector:
-        return None, f"System Info: update currently requires an explicit {entity_label} id."
+    if not selector.get('id'):
+        return None, "System Info: update currently requires an explicit work package id."
 
-    val = selector['id']
-    return (val[0] if isinstance(val, list) else val), None
+    return selector['id'][0], None
 
 
 #functions to write the body of the request (create or update)
@@ -123,6 +117,11 @@ def workpack_body_builder(payload):
     for key, val_list in payload.items():
         #the url request has the project in the url, there's no need to write it in the body
         if key == 'project':
+            continue
+
+        #the schema guarantees a list, but not that it has a value inside
+        if not val_list:
+            missing_entities.append(f"'{key}' has no value")
             continue
 
         value = val_list[0]
@@ -171,6 +170,11 @@ def project_body_builder(payload):
     missing_entities = []
 
     for key, val_list in payload.items():
+        #the schema guarantees a list, but not that it has a value inside
+        if not val_list:
+            missing_entities.append(f"'{key}' has no value")
+            continue
+
         value = val_list[0]
 
         if key in ('active', 'public'):
@@ -219,7 +223,7 @@ def workpack_patch(get_response, payload, get_url):
 
 def validate_via_form(request):
     """ does a request without executing the real action (update/write), just checks that everything is correct and safe (permissions) """
-    if not isinstance(request, dict) or "url" not in request or "body" not in request:
+    if "url" not in request or "body" not in request:
         return "System Info: nothing to validate, malformed write request."
 
     form_url = request["url"].rstrip("/") + "/form"
@@ -235,7 +239,7 @@ def validate_via_form(request):
         except Exception:
             return f"System Info: form validation call failed, error {status}."
 
-        #specific code returned by Form meaning the request cannot be resolved because of lacking permissions
+        #specific code returned by Form, meaning the request cannot be resolved because of lacking permissions
         if status == 403:
             return f"System Info: permission denied, {data.get('message', 'you are not allowed to perform this action.')}"
 

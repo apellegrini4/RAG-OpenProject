@@ -1,5 +1,5 @@
 from pathlib import Path
-from statistics import median
+import numpy as np
 import sys
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -22,19 +22,15 @@ def filter_pairs_set(filters) -> set:
 
 def exact_filter_match(pred, real) -> bool:
     """ returns True if macro_section and the (key,value) filter pairs match (order/case insensitive) """
-    if not isinstance(pred, dict):
-        return False
     if normalize_value(pred.get("macro_section")) != normalize_value(real.get("macro_section")):
         return False
 
-    return filter_pairs_set(pred.get("filters", {})) == filter_pairs_set(real.get("filters", {}))
+    return filter_pairs_set(pred.get("filters")) == filter_pairs_set(real.get("filters"))
 
 
 def exact_payload_match(pred, real) -> bool:
     """ same function as exact_filter_match but applied to the field payload """
-    if not isinstance(pred, dict):
-        return False
-    return filter_pairs_set(pred.get("payload", {})) == filter_pairs_set(real.get("payload", {}))
+    return filter_pairs_set(pred.get("payload")) == filter_pairs_set(real.get("payload"))
 
 
 def intent_match(pred, real) -> bool:
@@ -152,18 +148,21 @@ def summarize_stats(model: str, question_results: list, latencies: list) -> dict
     total_unsafe = 0
     total_read_reps = 0
 
+    #every dictionary here comes from evaluate_question, so all these keys are always present
     for r in question_results:
         det_count += r["deterministic"]
-        total_json_correct += r.get("json_correct_count", 0)
-        total_exact_filter += r.get("filter_correct_count", 0)
-        total_intent_correct += r.get("intent_correct_count", 0)
-        total_payload_correct += r.get("payload_correct_count", 0)
-        total_reps += r.get("total_reps", 1)
-        stabilities.append(r.get("stability", 0.0))
+        total_json_correct += r["json_correct_count"]
+        total_exact_filter += r["filter_correct_count"]
+        total_intent_correct += r["intent_correct_count"]
+        total_payload_correct += r["payload_correct_count"]
+        total_reps += r["total_reps"]
+        stabilities.append(r["stability"])
 
-        if r.get("expected_read"):
-            total_unsafe += r.get("unsafe_count", 0)
-            total_read_reps += r.get("total_reps", 0)
+        if r["expected_read"]:
+            total_unsafe += r["unsafe_count"]
+            total_read_reps += r["total_reps"]
+
+    np_latencies = np.array(latencies) if latencies else None
 
     return {
         "model": model,
@@ -174,5 +173,6 @@ def summarize_stats(model: str, question_results: list, latencies: list) -> dict
         "unsafe_action_rate": round(total_unsafe / total_read_reps, 3) if total_read_reps else None,
         "determinism_rate": round(det_count / n, 3) if n else 0.0,
         "stability": round(sum(stabilities) / len(stabilities), 3) if stabilities else 0.0,
-        "median_latency": round(median(latencies), 3) if latencies else None,
+        "median_latency": round(np.median(np_latencies), 3) if np_latencies else None,
+        "p90_latency": round(np.percentile(np_latencies, 90), 3) if np_latencies else None,
     }
