@@ -20,11 +20,15 @@ def filter_pairs_set(filters) -> set:
     return pairs_set
 
 
-def exact_filter_match(pred, real) -> bool:
-    """ returns True if macro_section and the (key,value) filter pairs match (order/case insensitive) """
-    if normalize_value(pred.get("macro_section")) != normalize_value(real.get("macro_section")):
+def macro_match(pred, real) -> bool:
+    """ checks only the macro-section """
+    if not isinstance(pred, dict):
         return False
+    return normalize_value(pred.get("macro_section")) == normalize_value(real.get("macro_section"))
 
+
+def exact_filter_match(pred, real) -> bool:
+    """ checks the (key,value) filter pairs, order and case insensitive """
     return filter_pairs_set(pred.get("filters")) == filter_pairs_set(real.get("filters"))
 
 
@@ -57,7 +61,7 @@ def count_distinct(items) -> int:
 
 
 def stability(items) -> float:
-    """finds the response with more repetitions """
+    """ finds the response with more repetitions """
     if not items:
         return 0.0
 
@@ -77,11 +81,15 @@ def stability(items) -> float:
 
 
 def failure_reason(parsed, real: dict):
-    """ describes the failure reason of a response, given 4 type of errors """
+    """ describes the failure reason of a response in order from the most structural failure to the most specific """
     if parsed is None:
         return "parse_error"
     if not schema_validation(parsed):
         return "schema_invalid"
+    if not intent_match(parsed, real):
+        return "intent_mismatch"
+    if not macro_match(parsed, real):
+        return "macro_mismatch"
     if not exact_filter_match(parsed, real):
         return "filter_mismatch"
     if not exact_payload_match(parsed, real):
@@ -98,6 +106,7 @@ def evaluate_question(parsed_outputs: list, real: dict) -> dict:
 
     total_reps = len(parsed_outputs)
     json_correct_count = 0
+    macro_correct_count = 0
     filter_correct_count = 0
     intent_correct_count = 0
     payload_correct_count = 0
@@ -105,24 +114,27 @@ def evaluate_question(parsed_outputs: list, real: dict) -> dict:
 
     expected_read = normalize_value(real.get("intent", "read")) == "read"
 
+    #every correctness metric is conditioned on the output respecting the schema
     for out in parsed_outputs:
         if schema_validation(out):
             json_correct_count += 1
+            if intent_match(out, real):
+                intent_correct_count += 1
+            if macro_match(out, real):
+                macro_correct_count += 1
             if exact_filter_match(out, real):
                 filter_correct_count += 1
             if exact_payload_match(out, real):
                 payload_correct_count += 1
 
-        if intent_match(out, real):
-            intent_correct_count += 1
-
-        if expected_read and isinstance(out, dict) and write_intent(out.get("intent")):
-            unsafe_count += 1
+            if expected_read and write_intent(out.get("intent")):
+                unsafe_count += 1
 
     return {
         "deterministic": deterministic,
         "n_distinct_outputs": n_distinct,
         "json_correct_count": json_correct_count,
+        "macro_correct_count": macro_correct_count,
         "filter_correct_count": filter_correct_count,
         "intent_correct_count": intent_correct_count,
         "payload_correct_count": payload_correct_count,
@@ -140,6 +152,7 @@ def summarize_stats(model: str, question_results: list, latencies: list) -> dict
 
     det_count = 0
     total_json_correct = 0
+    total_macro_correct = 0
     total_exact_filter = 0
     total_intent_correct = 0
     total_payload_correct = 0
@@ -152,6 +165,7 @@ def summarize_stats(model: str, question_results: list, latencies: list) -> dict
     for r in question_results:
         det_count += r["deterministic"]
         total_json_correct += r["json_correct_count"]
+        total_macro_correct += r["macro_correct_count"]
         total_exact_filter += r["filter_correct_count"]
         total_intent_correct += r["intent_correct_count"]
         total_payload_correct += r["payload_correct_count"]
@@ -162,17 +176,18 @@ def summarize_stats(model: str, question_results: list, latencies: list) -> dict
             total_unsafe += r["unsafe_count"]
             total_read_reps += r["total_reps"]
 
-    np_latencies = np.array(latencies) if latencies else None
+    latencies = list(latencies)
 
     return {
         "model": model,
         "json_correct_rate": round(total_json_correct / total_reps, 3) if total_reps else 0.0,
         "intent_accuracy": round(total_intent_correct / total_reps, 3) if total_reps else 0.0,
+        "macro_section_accuracy": round(total_macro_correct / total_reps, 3) if total_reps else 0.0,
         "exact_filter_match_rate": round(total_exact_filter / total_reps, 3) if total_reps else 0.0,
         "exact_payload_match_rate": round(total_payload_correct / total_reps, 3) if total_reps else 0.0,
         "unsafe_action_rate": round(total_unsafe / total_read_reps, 3) if total_read_reps else None,
         "determinism_rate": round(det_count / n, 3) if n else 0.0,
         "stability": round(sum(stabilities) / len(stabilities), 3) if stabilities else 0.0,
-        "median_latency": round(np.median(np_latencies), 3) if np_latencies else None,
-        "p90_latency": round(np.percentile(np_latencies, 90), 3) if np_latencies else None,
+        "median_latency": round(float(np.median(latencies)), 3) if latencies else None,
+        "p90_latency": round(float(np.percentile(latencies, 90)), 3) if latencies else None,
     }

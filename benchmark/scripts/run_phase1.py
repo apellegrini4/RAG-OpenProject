@@ -22,7 +22,10 @@ PROJECT_ROOT = CWD.parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(CWD))
 
-from metrics_phase1 import evaluate_question, summarize_stats, failure_reason, schema_validation, exact_filter_match
+from collections import Counter
+
+from metrics_phase1 import (evaluate_question, summarize_stats, failure_reason, schema_validation,
+                            exact_filter_match)
 from llm_builder import build_llm, CONFIG_PATH
 import writers
 
@@ -38,6 +41,8 @@ def parse_args():
                     help="filter the dataset to only this difficulty level (default: all)")
     ap.add_argument("--questions", default=None,
                     help="override the questions.jsonl path from config.yaml (useful for trial runs)")
+    ap.add_argument("--no-index", action="store_true",
+                    help="do not append to results/index.csv: for diagnostic runs")
     return ap.parse_args()
 
 def strip_reasoning(parsed):
@@ -86,6 +91,29 @@ def save_results(repetitions, q, m_dir):
     writers.write_failures(m_dir, failure_rows)
 
 
+def print_question_line(q, metrics, repetitions):
+    """ prints the reason of the query failure """
+    total = metrics["total_reps"]
+    print(f"  {q['id']:<4} {q['intent']:<6} {q['macro_section']:<14}"
+          f" json {metrics['json_correct_count']:>3}/{total}"
+          f" | intent {metrics['intent_correct_count']:>3}/{total}"
+          f" | macro {metrics['macro_correct_count']:>3}/{total}"
+          f" | filters {metrics['filter_correct_count']:>3}/{total}"
+          f" | payload {metrics['payload_correct_count']:>3}/{total}"
+          f" | {'identical' if metrics['deterministic'] else str(metrics['n_distinct_outputs']) + ' varianti'}"
+          f", stab {metrics['stability'] * 100:.0f}%")
+
+    if (metrics["json_correct_count"] == total and metrics["intent_correct_count"] == total
+            and metrics["macro_correct_count"] == total and metrics["filter_correct_count"] == total
+            and metrics["payload_correct_count"] == total):
+        return
+
+    #the most frequent failure reason is the representative one (temperature=0)
+    reasons = Counter(failure_reason(rep["parsed"], q) for rep in repetitions)
+    reasons.pop(None, None)
+    print(f"\n\tWRONG, cause: {reasons.most_common(1)[0][0]}")
+
+
 def run_model(chain, questions, format_instructions, reps, model, m_dir):
     """ invokes the model reps times and calculates the results """ 
     results = []
@@ -119,14 +147,7 @@ def run_model(chain, questions, format_instructions, reps, model, m_dir):
 
         save_results(repetitions, q, m_dir)
 
-        status = "identical" if metrics["deterministic"] else f"{metrics['n_distinct_outputs']} variants"
-        print(f"  {q['id']:<4} {q['difficulty']:<7}"
-              f" determinism: {status:<12}"
-              f" stability: {metrics['stability'] * 100:5.1f}%"
-              f" json_correct: {metrics['json_correct_count']}/{metrics['total_reps']:<5}"
-              f" intent: {metrics['intent_correct_count']}/{metrics['total_reps']:<5}"
-              f" filters: {metrics['filter_correct_count']}/{metrics['total_reps']:<5}"
-              f" payload: {metrics['payload_correct_count']}/{metrics['total_reps']}")
+        print_question_line(q, metrics, repetitions)
         results.append(metrics)
 
     return results, latencies
@@ -153,7 +174,7 @@ def main():
     runs_dir = PROJECT_ROOT / cfg["paths"]["runs"]
     results_dir = PROJECT_ROOT / cfg["paths"].get("results", "benchmark/results")
 
-    from structured_URL_generator import prompt, parser
+    from structured_URL_generator import prompt, parser, PROMPT_VERSION
     format_instructions = parser.get_format_instructions()
 
     #creates the new folder
@@ -167,7 +188,7 @@ def main():
         "timestamp": timestamp, "started_at": started_at, "finished_at": None,
         "models": models, "temperature": temperature, "repetitions": reps,
         "difficulty": args.difficulty, "questions_path": str(questions_path),
-        "n_questions": len(questions), "config": cfg,
+        "n_questions": len(questions), "prompt_version": PROMPT_VERSION, "config": cfg,
     }
     writers.write_manifest(run_dir, manifest)
 
@@ -195,26 +216,36 @@ def main():
     #saves important info 
     writers.write_summary_csv(run_dir, summary_rows)
     writers.write_report_md(run_dir, run_name, summary_rows)
-    writers.append_index_csv(results_dir, index_rows)
+    if args.no_index:
+        print("  (--no-index: results/index.csv non toccato)")
+    else:
+        writers.append_index_csv(results_dir, index_rows)
 
     manifest["finished_at"] = datetime.now(timezone.utc).isoformat()
     writers.write_manifest(run_dir, manifest)
 
-    print(" SUMMARY ")
+    print("\n SUMMARY ")
+    header = (f"  {'model':<22}{'json':>7}{'intent':>8}{'macro':>8}{'filters':>9}"
+              f"{'payload':>9}{'unsafe':>8}{'determ':>8}{'stab':>7}{'lat med':>9}{'lat p90':>9}")
+    print(header)
+    print("  " + "-" * (len(header) - 2))
     for row in summary_rows:
-        unsafe = row.get("unsafe_action_rate")
-        unsafe_str = f"{unsafe * 100:5.1f}%" if unsafe is not None else "   n/a"
-        print(f"  {row['model']:<26}"
-              f" intent: {row['intent_accuracy'] * 100:5.1f}% "
-              f" filters: {row['exact_filter_match_rate'] * 100:5.1f}% "
-              f" payload: {row['exact_payload_match_rate'] * 100:5.1f}% "
-              f" unsafe: {unsafe_str} "
-              f" determinism: {row['determinism_rate'] * 100:5.1f}% "
-              f" stability: {row['stability'] * 100:5.1f}% "
-              f" json_correct: {row['json_correct_rate'] * 100:5.1f}% "
-              f" latency: median, p90 --> {row['median_latency']}s , {row['p90_latency']}s")
+        unsafe = row["unsafe_action_rate"]
+        unsafe_str = f"{unsafe * 100:.1f}%" if unsafe is not None else "n/a"
+        print(f"  {row['model']:<22}"
+              f"{row['json_correct_rate'] * 100:6.1f}%"
+              f"{row['intent_accuracy'] * 100:7.1f}%"
+              f"{row['macro_section_accuracy'] * 100:7.1f}%"
+              f"{row['exact_filter_match_rate'] * 100:8.1f}%"
+              f"{row['exact_payload_match_rate'] * 100:8.1f}%"
+              f"{unsafe_str:>8}"
+              f"{row['determinism_rate'] * 100:7.1f}%"
+              f"{row['stability'] * 100:6.1f}%"
+              f"{row['median_latency']:8.2f}s"
+              f"{row['p90_latency']:8.2f}s")
     print(f"\nResults written to --> {run_dir}")
-    print(f"Appended to        --> {results_dir / 'index.csv'}")
+    if not args.no_index:
+        print(f"Appended to        --> {results_dir / 'index.csv'}")
 
 
 if __name__ == "__main__":

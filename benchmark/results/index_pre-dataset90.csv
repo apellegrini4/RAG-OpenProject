@@ -1,0 +1,2 @@
+run,timestamp,model,json_correct_rate,intent_accuracy,exact_filter_match_rate,exact_payload_match_rate,unsafe_action_rate,determinism_rate,stability,median_latency
+20260731-133510__phase1__trial-task3,20260731-133510,qwen2.5-coder:0.5b,1.0,1.0,0.625,0.5,0.0,0.5,0.75,5.277
