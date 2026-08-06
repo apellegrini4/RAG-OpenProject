@@ -6,8 +6,8 @@ import csv
 import json
 import sys
 
-HERE = Path(__file__).resolve().parent
-PROJECT_ROOT = HERE.parents[1]
+HERE = Path(__file__).resolve().parent         # benchmark/scripts/phase_1/
+PROJECT_ROOT = HERE.parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(HERE))
 
@@ -15,8 +15,8 @@ from metrics_phase1 import (exact_filter_match, exact_payload_match, intent_matc
                             schema_validation)
 
 QUESTIONS = PROJECT_ROOT / "benchmark" / "dataset" / "questions_90.jsonl"
-RUNS_DIR = PROJECT_ROOT / "benchmark" / "runs"
-OUTPUT = PROJECT_ROOT / "benchmark" / "results" / "total_results_phase1.csv"
+RUNS_DIR = PROJECT_ROOT / "benchmark" / "runs" / "phase1"
+OUTPUT = PROJECT_ROOT / "benchmark" / "results" / "phase1" / "total_results_phase1.csv"
 
 #the three runs of the final TEST_DIR, prompt v2-verbose
 TEST_DIR = {

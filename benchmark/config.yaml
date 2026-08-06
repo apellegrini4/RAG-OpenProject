@@ -17,6 +17,7 @@ repeat_penalty: 1.0
 #paths
 paths:
   questions: "benchmark/dataset/questions_90.jsonl"
+  answers: "benchmark/dataset/answers/ideal_answers.jsonl"
   mock_data: "benchmark/dataset/mock_data"
   runs: "benchmark/runs"
   results: "benchmark/results"

@@ -5,9 +5,9 @@ Checks if the json is identical to the real one and verifies also that the outpu
 valid schema (json_correct).
 
 Usage example:
-    python benchmark/scripts/run_phase1.py
-    python benchmark/scripts/run_phase1.py --repetitions 30 --label demo
-    python benchmark/scripts/run_phase1.py --models qwen2.5-coder:1.5b
+    python benchmark/scripts/phase_1/run_phase1.py
+    python benchmark/scripts/phase_1/run_phase1.py --repetitions 30 --label demo
+    python benchmark/scripts/phase_1/run_phase1.py --models qwen2.5-coder:1.5b
 """
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,9 +17,11 @@ import sys
 import time
 import yaml
 
-CWD = Path(__file__).resolve().parent
-PROJECT_ROOT = CWD.parents[1]
+CWD = Path(__file__).resolve().parent          # benchmark/scripts/phase_1/
+SCRIPTS_DIR = CWD.parent
+PROJECT_ROOT = CWD.parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(SCRIPTS_DIR))
 sys.path.insert(0, str(CWD))
 
 from collections import Counter
@@ -33,7 +35,7 @@ import writers
 def parse_args():
     ap = argparse.ArgumentParser(description="Phase-1")
     ap.add_argument("--repetitions", type=int, default=None,
-                    help="repetitions per question (default: 30)")
+                    help="repetitions per question (default: config.repetitions)")
     ap.add_argument("--models", nargs="*", default=None,
                     help="override the model list from config (space separated)")
     ap.add_argument("--label", default="demo")
@@ -161,7 +163,7 @@ def main():
 
     models = args.models or cfg["models_phase1"]
     temperature = cfg.get("temperature_phase1", 0.0)
-    reps = args.repetitions or cfg.get("repetitions_latency", 30)
+    reps = args.repetitions or cfg["repetitions"]
 
     #reads the questions from the jsonl (single file, filtered by --difficulty at load time)
     questions_path = Path(args.questions) if args.questions else PROJECT_ROOT / cfg["paths"]["questions"]
@@ -171,8 +173,9 @@ def main():
     #takes only the questions for the specified difficulty
     if args.difficulty:
         questions = [q for q in questions if q.get("difficulty") == args.difficulty]
-    runs_dir = PROJECT_ROOT / cfg["paths"]["runs"]
-    results_dir = PROJECT_ROOT / cfg["paths"].get("results", "benchmark/results")
+    #runs and results are both grouped by phase
+    runs_dir = PROJECT_ROOT / cfg["paths"]["runs"] / "phase1"
+    results_dir = PROJECT_ROOT / cfg["paths"]["results"] / "phase1"
 
     from structured_URL_generator import prompt, parser, PROMPT_VERSION
     format_instructions = parser.get_format_instructions()

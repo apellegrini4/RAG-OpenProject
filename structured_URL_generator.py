@@ -25,8 +25,6 @@ class QueryParams(BaseModel):
                           description="fields to write (create/update), empty for read. Every value is a list",
                           examples=[{'subject': ['Rotate the API keys'], 'type': ['Task']}])
 
-#the prompt version travels in the run manifest: a number that changes without saying which
-#template produced it is not reproducible. Previous versions live in _pianificazione/prompt_versions/
 PROMPT_VERSION = "v2-verbose"
 
 #structured template that uses the Chain of Thought

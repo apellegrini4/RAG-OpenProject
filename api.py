@@ -66,10 +66,8 @@ async def ask_agent(request: requestStructure):
         url_constructur_chain = define_urlConstructor_chain(request.model_name)
         response_chain = define_response_chain(request.model_name)
 
-        user_query = f"{request.question} (Note: the user asking is {request.username})" #andrà tolto
-
         json_params = url_constructur_chain.invoke({"format_instructions": parser.get_format_instructions(),
-                                    "user_query": user_query})
+                                    "user_query": request.question})
         
         with open("tests/stress_test.json", "r") as f:
             final_data = json.load(f)

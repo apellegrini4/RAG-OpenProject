@@ -1,11 +1,3 @@
-import os
-
-TEMP_FOLDER = os.getenv('TEMP_FOLDER', './_temp')
-
-if not os.path.exists(TEMP_FOLDER):
-        os.makedirs(TEMP_FOLDER)
-
-
 def clean_and_remodel_json(data):
     #check to see if there was an error or not
     if isinstance(data, str):
@@ -17,39 +9,41 @@ def clean_and_remodel_json(data):
         'items': []
     }
 
-    useful_categories = ['active', 'public', 'createdAt', 'updatedAt', 'startDate', 'dueDate', 'percentageDone']
-    useful_links = ['type', 'status', 'priority', 'project', 'author', 'assignee', 'version', 'parent']
+    project_categories = ['active', 'public']
+    workpackage_categories = ['startDate', 'dueDate', 'percentageDone']
+
+    useful_links = ['type', 'status', 'priority', 'project', 'author', 'assignee', 'version']
     all_elements = data.get('_embedded', {}).get('elements', [])
 
-    if all_elements:
-        
-        for item in all_elements:
-            reduced_item = {}
-            reduced_item['type'] = item.get('_type')
-            reduced_item['id'] = item.get('id')
+    for item in all_elements:
+        reduced_item = {}
+  
+        reduced_item['entity'] = item.get('_type')
+        reduced_item['id'] = item.get('id')
 
-            #check to see if it's a project or a workpackage
-            if reduced_item['type'] == 'Project':
-                reduced_item['name'] = item.get('name')
+        #check to see if it's a project or a workpackage
+        is_project = reduced_item['entity'] == 'Project'
+        if is_project:
+            reduced_item['name'] = item.get('name')
+        else:
+            reduced_item['subject'] = item.get('subject')
 
-            else:
-                reduced_item['subject'] = item.get('subject')
-            
-            #the description can be find in the raw section as simple text
-            reduced_item['description'] = item.get('description').get('raw')
-    
-            for cat in useful_categories:
-                if cat in item and item[cat] is not None:
-                     reduced_item[cat] = item[cat]
+        description = item.get('description')
+        if description and description.get('raw'):
+            reduced_item['description'] = description['raw']
 
-            links = item.get('_links', {})
+        for cat in (project_categories if is_project else workpackage_categories):
+            if item.get(cat) is not None:
+                reduced_item[cat] = item[cat]
 
-            for l in useful_links:
-                if l in links:
-                    title = links[l].get('title')
-                    if title:
-                        reduced_item[l] = title
+        links = item.get('_links', {})
 
-            refined_json['items'].append(reduced_item) #appends the item containg only important info to the final json
+        for l in useful_links:
+            if l in links:
+                title = links[l].get('title')
+                if title:
+                    reduced_item[l] = title
+
+        refined_json['items'].append(reduced_item) #appends the item containg only important info to the final json
 
     return refined_json

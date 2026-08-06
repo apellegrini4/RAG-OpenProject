@@ -34,21 +34,3 @@ def define_response_chain(model_name):
     )
 
     return chain
-
-#not used anymore, everything is called in the api.py file
-# def generate_response(user_query, reduced_json):
-#     if isinstance(reduced_json, dict) or isinstance(reduced_json, list):
-#         json_data = json.dumps(reduced_json, indent=2)
-#     else:
-#         json_data = str(reduced_json)
-
-#     try:
-#         response = chain.invoke({
-#           'json' : json_data,
-#           'user_query' : user_query  
-#         })
-
-#         return response
-    
-#     except Exception as e:
-#         return 'I am sorry, there was an error in the generation of the response'

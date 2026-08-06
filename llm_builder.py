@@ -1,4 +1,4 @@
-#This is the unique point where a ChatOllama instance is constructed,
+#this is the unique point where a ChatOllama instance is constructed,
 #parameters are read from benchmark/config.yaml
 
 from pathlib import Path
