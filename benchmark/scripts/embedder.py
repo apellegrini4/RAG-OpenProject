@@ -35,6 +35,28 @@ def get_embedder() -> Embedder:
     return Embedder()
 
 
+class CachedEmbedder:
+    """ embeds each distinct text once, instead of once per use. The same text always has the same vector """
+
+    def __init__(self, embedder):
+        self.embedder = embedder
+        self.cache = {}
+        self.calls = 0
+
+    def vector(self, text):
+        #checks if the text was already registered (2 or more responses might be identical)
+        if text not in self.cache:
+            self.cache[text] = self.embedder.embed([text])[0]
+            self.calls += 1
+        return self.cache[text]
+
+    def cosine(self, generated, ideal):
+        #a model that returned nothing scores 0, it does not crash the run
+        if not generated:
+            return 0.0
+        return cosine_similarity(self.vector(generated), self.vector(ideal))
+
+
 def cosine_similarity(a: Sequence[float], b: Sequence[float]) -> float:
     """ calculates the cosine similarity between two 1D vectors """
     A = np.array(a)

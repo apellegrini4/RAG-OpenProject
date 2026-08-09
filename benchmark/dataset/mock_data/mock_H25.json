@@ -1,0 +1,12 @@
+{
+  "intent": "update",
+  "macro_section": "projects",
+  "ready_to_commit": true,
+  "payload": {
+    "active": "f",
+    "description": "Superseded by the new compliance workspace"
+  },
+  "target": {
+    "id": "4"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "intent": "create",
+  "macro_section": "projects",
+  "ready_to_commit": true,
+  "payload": {
+    "name": "Compliance 2027",
+    "active": "t",
+    "description": "Follow-up to the current audit cycle"
+  }
+}

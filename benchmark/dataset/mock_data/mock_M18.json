@@ -1,0 +1,10 @@
+{
+  "intent": "create",
+  "macro_section": "projects",
+  "ready_to_commit": true,
+  "payload": {
+    "name": "Security Review",
+    "public": "f",
+    "description": "Quarterly penetration testing and remediation"
+  }
+}

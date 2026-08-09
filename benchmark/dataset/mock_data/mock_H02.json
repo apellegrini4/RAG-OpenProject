@@ -1,0 +1,22 @@
+{
+  "total_results": 2,
+  "number_of_results_in_the_page": 2,
+  "items": [
+    {
+      "entity": "WorkPackage",
+      "id": 41,
+      "subject": "Login page fails to redirect",
+      "status": "Closed",
+      "type": "Bug",
+      "project": "Website Migration"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 58,
+      "subject": "Login form accepts empty password",
+      "status": "Closed",
+      "type": "Bug",
+      "project": "Mobile App"
+    }
+  ]
+}

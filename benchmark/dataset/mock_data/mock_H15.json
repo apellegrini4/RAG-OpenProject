@@ -1,0 +1,13 @@
+{
+  "intent": "create",
+  "macro_section": "work_packages",
+  "ready_to_commit": true,
+  "payload": {
+    "subject": "Archive the 2019 exports",
+    "type": "Task",
+    "project": "Data Migration",
+    "assignee": "Alba Pellegrini",
+    "dueDate": "2026-09-18",
+    "description": "Legal signed off on the retention window"
+  }
+}

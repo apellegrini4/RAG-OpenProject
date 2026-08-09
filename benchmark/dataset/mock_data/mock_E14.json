@@ -1,0 +1,11 @@
+{
+  "intent": "create",
+  "macro_section": "work_packages",
+  "ready_to_commit": true,
+  "payload": {
+    "subject": "Prepare rollback script",
+    "type": "Task",
+    "project": "Data Migration",
+    "version": "Sprint 1"
+  }
+}

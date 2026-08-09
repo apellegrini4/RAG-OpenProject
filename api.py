@@ -33,6 +33,41 @@ def intent_identifier(json_data):
     return f"System Info: unknown intent '{intent}'"
 
 
+def pagination_warning(data):
+    """ the sentence to append when the API returned only part of what it found, or None """
+    total = data.get('total_results', 0) if isinstance(data, dict) else 0
+    page = data.get('number_of_results_in_the_page', 0) if isinstance(data, dict) else 0
+
+    if total > page:
+        return f"I found {total} results but I'm only showing you the {page} recent ones."
+    return None
+
+
+def single(value):
+    """ the extraction schema wraps every value in a list, a sentence needs the value itself """
+    return value[0] if isinstance(value, list) and value else value
+
+
+def write_notice(extraction, result):
+    """ what phase 2 receives when a write has been validated but not committed. 
+    A validated write comes back as {method, url, body, ready_to_commit}: everything needed to
+    perform the real request but nothing that can be turned into a sentence for the response """
+    
+    notice = {
+        "intent": extraction.get("intent"),
+        "macro_section": extraction.get("macro_section"),
+        "ready_to_commit": result.get("ready_to_commit", False),
+        "payload": {k: single(v) for k, v in (extraction.get("payload") or {}).items()},
+    }
+
+    #for an update the filters hold the selector of the target, for a create they are empty
+    selector = {k: single(v) for k, v in (extraction.get("filters") or {}).items()}
+    if selector:
+        notice["target"] = selector
+
+    return notice
+
+
 def execute(json_data):
     """ identifies the intent and excecute it"""
     request = intent_identifier(json_data)
@@ -73,21 +108,24 @@ async def ask_agent(request: requestStructure):
             final_data = json.load(f)
         # final_data = execute(json_params)
 
-        #a read returns a dictionary, a failure returns a plain "System Info" string
-        if isinstance(final_data, dict):
-            total = final_data.get('total_results', 0)
-            page = final_data.get('number_of_results_in_the_page', 0)
+        #three possible shapes needed to generate a response:
+        #a validated write, a read, or a plain "System Info" string when something was refused
+        if isinstance(final_data, dict) and final_data.get('ready_to_commit'):
+            json_data = json.dumps(write_notice(json_params, final_data), indent=2)
 
-            if total > page:
-                final_data['pagination_warning'] = f"I found {total} results but I'm only showing you the {page} recent ones."
-
+        elif isinstance(final_data, dict):
             json_data = json.dumps(final_data, indent=2)
         else:
             json_data = str(final_data)
 
         response = response_chain.invoke({'json' : json_data,
-          'user_query' : request.question 
+          'user_query' : request.question
         })
+
+        #the truncation notice is appended here
+        warning = pagination_warning(final_data)
+        if warning:
+            response = f"{response.rstrip()} {warning}"
 
         execution_time = round(time.time() - start_time, 2) #calcutes the response generation time
 

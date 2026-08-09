@@ -1,0 +1,18 @@
+{
+  "total_results": 2,
+  "number_of_results_in_the_page": 2,
+  "items": [
+    {
+      "entity": "Project",
+      "id": 4,
+      "name": "Data Migration",
+      "active": false
+    },
+    {
+      "entity": "Project",
+      "id": 7,
+      "name": "Website Migration 2024",
+      "active": false
+    }
+  ]
+}

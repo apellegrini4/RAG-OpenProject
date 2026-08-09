@@ -1,0 +1,11 @@
+{
+  "intent": "create",
+  "macro_section": "work_packages",
+  "ready_to_commit": true,
+  "payload": {
+    "subject": "Phase 1 complete",
+    "type": "Milestone",
+    "project": "Website Migration",
+    "dueDate": "2026-09-30"
+  }
+}

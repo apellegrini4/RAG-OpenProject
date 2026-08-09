@@ -1,0 +1,12 @@
+{
+  "intent": "update",
+  "macro_section": "projects",
+  "ready_to_commit": true,
+  "payload": {
+    "name": "Compliance Audit",
+    "public": "t"
+  },
+  "target": {
+    "name": "Internal Audit"
+  }
+}

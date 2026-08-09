@@ -1,0 +1,12 @@
+{
+  "intent": "create",
+  "macro_section": "work_packages",
+  "ready_to_commit": true,
+  "payload": {
+    "subject": "Export audit logs to CSV",
+    "type": "Feature",
+    "project": "Internal Audit",
+    "status": "Confirmed",
+    "version": "Sprint 3"
+  }
+}

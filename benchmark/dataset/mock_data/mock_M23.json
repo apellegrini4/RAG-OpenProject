@@ -1,0 +1,12 @@
+{
+  "intent": "update",
+  "macro_section": "work_packages",
+  "ready_to_commit": true,
+  "payload": {
+    "startDate": "2026-09-22",
+    "dueDate": "2026-10-15"
+  },
+  "target": {
+    "id": "78"
+  }
+}

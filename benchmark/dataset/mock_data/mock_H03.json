@@ -1,0 +1,36 @@
+{
+  "total_results": 3,
+  "number_of_results_in_the_page": 3,
+  "items": [
+    {
+      "entity": "WorkPackage",
+      "id": 8,
+      "subject": "Fix checkout crash",
+      "status": "In progress",
+      "type": "Bug",
+      "author": "Mario Rossi",
+      "assignee": "Giulia Bianchi",
+      "dueDate": "2026-08-07"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 33,
+      "subject": "Payment retry logic",
+      "status": "New",
+      "type": "Task",
+      "author": "Mario Rossi",
+      "assignee": "Giulia Bianchi",
+      "dueDate": "2026-08-05"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 102,
+      "subject": "Validate migrated schema",
+      "status": "In progress",
+      "type": "Task",
+      "author": "Mario Rossi",
+      "assignee": "Giulia Bianchi",
+      "dueDate": "2026-08-06"
+    }
+  ]
+}

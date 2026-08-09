@@ -1,0 +1,10 @@
+{
+  "intent": "create",
+  "macro_section": "projects",
+  "ready_to_commit": true,
+  "payload": {
+    "name": "Design System",
+    "public": "t",
+    "description": "Shared UI components for all the front-end teams"
+  }
+}

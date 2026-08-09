@@ -1,0 +1,12 @@
+{
+  "intent": "update",
+  "macro_section": "projects",
+  "ready_to_commit": true,
+  "payload": {
+    "name": "Compliance Audit",
+    "description": "Merged with the former internal audit workspace"
+  },
+  "target": {
+    "id": "4"
+  }
+}

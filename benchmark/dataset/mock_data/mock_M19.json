@@ -1,0 +1,12 @@
+{
+  "intent": "update",
+  "macro_section": "work_packages",
+  "ready_to_commit": true,
+  "payload": {
+    "status": "In progress",
+    "priority": "High"
+  },
+  "target": {
+    "id": "33"
+  }
+}

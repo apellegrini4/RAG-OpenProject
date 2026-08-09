@@ -1,0 +1,12 @@
+{
+  "intent": "update",
+  "macro_section": "projects",
+  "ready_to_commit": true,
+  "payload": {
+    "public": "t",
+    "description": "Open to all the internal stakeholders"
+  },
+  "target": {
+    "id": "9"
+  }
+}

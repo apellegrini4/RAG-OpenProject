@@ -148,7 +148,7 @@ def build_read_request(json_data) -> dict:
     #checks if macro_section is a valid possibility
     macro_sect = json_data['macro_section']
     if macro_sect == 'out_of_scope':
-        return 'Operation not allowed, query out of domain'
+        return "System Info: operation not allowed, query out of domain."
     if macro_sect not in ALLOWED_MACRO_SECTIONS:
         return f"System Info: unknown macro-section '{macro_sect}'."
 
@@ -250,7 +250,7 @@ def build_create_request(json_data) -> dict:
     #checks if macro_section is a valid possibility
     macro_section = json_data['macro_section']
     if macro_section == 'out_of_scope':
-        return 'Operation not allowed, query out of domain'
+        return "System Info: operation not allowed, query out of domain."
     if macro_section not in ALLOWED_MACRO_SECTIONS:
         return "System Info: create is only supported for projects or work packages."
 
@@ -299,7 +299,7 @@ def build_update_request(json_data) -> dict:
     #checks if macro_section is a valid possibility
     macro_section = json_data['macro_section']
     if macro_section == 'out_of_scope':
-        return 'Operation not allowed, query out of domain'
+        return "System Info: operation not allowed, query out of domain."
     if macro_section not in ALLOWED_MACRO_SECTIONS:
         return "System Info: update is only supported for projects or work packages."
 
@@ -334,7 +334,8 @@ def fetch_openproject_data(final_url):
         response.raise_for_status() #to check for example the case of invalid filter values
         data = response.json()
 
-        if data.get('total', 0) == 0:
+        #total only exists on a Collection
+        if 'total' in data and data['total'] == 0:
             return "System Info: no result"
 
         return data

@@ -1,0 +1,11 @@
+{
+  "intent": "create",
+  "macro_section": "work_packages",
+  "ready_to_commit": true,
+  "payload": {
+    "subject": "Dark mode for the catalogue",
+    "type": "Feature",
+    "project": "Mobile App",
+    "startDate": "2026-09-07"
+  }
+}

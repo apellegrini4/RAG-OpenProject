@@ -1,0 +1,11 @@
+{
+  "intent": "update",
+  "macro_section": "projects",
+  "ready_to_commit": true,
+  "payload": {
+    "description": "Legacy data consolidation, phase two"
+  },
+  "target": {
+    "id": "6"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "intent": "create",
+  "macro_section": "work_packages",
+  "ready_to_commit": true,
+  "payload": {
+    "subject": "Cart empties on refresh",
+    "type": "Bug",
+    "project": "Mobile App",
+    "assignee": "Giulia Bianchi",
+    "dueDate": "2026-10-03"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "total_results": 4,
+  "number_of_results_in_the_page": 4,
+  "items": [
+    {
+      "entity": "WorkPackage",
+      "id": 78,
+      "subject": "Rollback script cleanup",
+      "status": "In progress",
+      "type": "Task",
+      "version": "Sprint 2",
+      "author": "Giulia Bianchi"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 52,
+      "subject": "Add dark mode toggle",
+      "status": "New",
+      "type": "Feature",
+      "version": "Sprint 2",
+      "author": "Giulia Bianchi"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 64,
+      "subject": "Cart empties on refresh",
+      "status": "New",
+      "type": "Bug",
+      "version": "Sprint 2",
+      "author": "Giulia Bianchi"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 105,
+      "subject": "Dry-run the cutover",
+      "status": "New",
+      "type": "Task",
+      "version": "Sprint 2",
+      "author": "Giulia Bianchi"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "total_results": 3,
+  "number_of_results_in_the_page": 3,
+  "items": [
+    {
+      "entity": "WorkPackage",
+      "id": 41,
+      "subject": "Login page fails to redirect",
+      "status": "New",
+      "type": "Bug",
+      "project": "Website Migration"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 43,
+      "subject": "Login crash on Android",
+      "status": "In progress",
+      "type": "Bug",
+      "project": "Mobile App"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 58,
+      "subject": "Login form accepts empty password",
+      "status": "Confirmed",
+      "type": "Bug",
+      "project": "Mobile App"
+    }
+  ]
+}

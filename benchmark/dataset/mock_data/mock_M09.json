@@ -1,0 +1,12 @@
+{
+  "total_results": 1,
+  "number_of_results_in_the_page": 1,
+  "items": [
+    {
+      "entity": "Project",
+      "id": 5,
+      "name": "Internal Audit",
+      "public": true
+    }
+  ]
+}

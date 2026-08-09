@@ -1,0 +1,42 @@
+{
+  "total_results": 4,
+  "number_of_results_in_the_page": 4,
+  "items": [
+    {
+      "entity": "WorkPackage",
+      "id": 90,
+      "subject": "Design new onboarding flow",
+      "status": "New",
+      "type": "Task",
+      "assignee": "Alba Pellegrini",
+      "project": "Website Migration"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 106,
+      "subject": "Sign off the retention window",
+      "status": "New",
+      "type": "Milestone",
+      "assignee": "Alba Pellegrini",
+      "project": "Data Migration"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 46,
+      "subject": "Publish the release notes",
+      "status": "New",
+      "type": "Task",
+      "assignee": "Alba Pellegrini",
+      "project": "Website Migration"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 12,
+      "subject": "Content freeze",
+      "status": "New",
+      "type": "Milestone",
+      "assignee": "Alba Pellegrini",
+      "project": "Website Migration"
+    }
+  ]
+}

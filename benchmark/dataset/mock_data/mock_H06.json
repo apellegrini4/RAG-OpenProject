@@ -1,0 +1,15 @@
+{
+  "total_results": 1,
+  "number_of_results_in_the_page": 1,
+  "items": [
+    {
+      "entity": "WorkPackage",
+      "id": 64,
+      "subject": "Cart empties on refresh",
+      "status": "Closed",
+      "type": "Bug",
+      "dueDate": "2026-10-03",
+      "percentageDone": 100
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "total_results": 2,
+  "number_of_results_in_the_page": 2,
+  "items": [
+    {
+      "entity": "WorkPackage",
+      "id": 90,
+      "subject": "Design new onboarding flow",
+      "status": "New",
+      "type": "Task",
+      "version": "Sprint 3",
+      "assignee": "Alba Pellegrini",
+      "percentageDone": 0
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 106,
+      "subject": "Sign off the retention window",
+      "status": "New",
+      "type": "Milestone",
+      "version": "Sprint 3",
+      "assignee": "Alba Pellegrini",
+      "percentageDone": 0
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "intent": "create",
+  "macro_section": "work_packages",
+  "ready_to_commit": true,
+  "payload": {
+    "subject": "Content freeze",
+    "type": "Milestone",
+    "project": "Website Migration",
+    "assignee": "Alba Pellegrini",
+    "version": "Sprint 1",
+    "status": "In progress"
+  }
+}

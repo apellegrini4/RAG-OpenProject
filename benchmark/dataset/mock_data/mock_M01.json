@@ -1,0 +1,36 @@
+{
+  "total_results": 3,
+  "number_of_results_in_the_page": 3,
+  "items": [
+    {
+      "entity": "WorkPackage",
+      "id": 71,
+      "subject": "Offline mode for the catalogue",
+      "status": "New",
+      "type": "Feature",
+      "priority": "High",
+      "project": "Mobile App",
+      "startDate": "2026-09-07"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 64,
+      "subject": "Cart empties on refresh",
+      "status": "New",
+      "type": "Bug",
+      "priority": "High",
+      "project": "Mobile App",
+      "startDate": "2026-09-07"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 52,
+      "subject": "Add dark mode toggle",
+      "status": "In progress",
+      "type": "Feature",
+      "priority": "High",
+      "project": "Mobile App",
+      "startDate": "2026-09-07"
+    }
+  ]
+}

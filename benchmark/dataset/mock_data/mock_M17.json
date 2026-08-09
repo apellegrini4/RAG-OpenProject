@@ -1,0 +1,10 @@
+{
+  "intent": "create",
+  "macro_section": "projects",
+  "ready_to_commit": true,
+  "payload": {
+    "name": "Data Retention 2027",
+    "active": "t",
+    "description": "Retention policy rollout across all the archives"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "total_results": 6,
+  "number_of_results_in_the_page": 6,
+  "items": [
+    {
+      "entity": "WorkPackage",
+      "id": 8,
+      "subject": "Fix checkout crash",
+      "status": "In progress",
+      "type": "Bug",
+      "project": "Mobile App",
+      "priority": "Immediate"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 41,
+      "subject": "Login page fails to redirect",
+      "status": "New",
+      "type": "Bug",
+      "project": "Website Migration",
+      "priority": "High"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 64,
+      "subject": "Cart empties on refresh",
+      "status": "New",
+      "type": "Bug",
+      "project": "Mobile App",
+      "priority": "High"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 107,
+      "subject": "Reconcile duplicate accounts",
+      "status": "In progress",
+      "type": "Bug",
+      "project": "Data Migration",
+      "priority": "Normal"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 55,
+      "subject": "Broken image icons on the profile page",
+      "status": "New",
+      "type": "Bug",
+      "project": "Website Migration",
+      "priority": "Low"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 23,
+      "subject": "Signature field missing",
+      "status": "Confirmed",
+      "type": "Bug",
+      "project": "Internal Audit",
+      "priority": "High"
+    }
+  ]
+}

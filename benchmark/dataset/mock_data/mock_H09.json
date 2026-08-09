@@ -1,0 +1,27 @@
+{
+  "total_results": 3,
+  "number_of_results_in_the_page": 3,
+  "items": [
+    {
+      "entity": "Project",
+      "id": 4,
+      "name": "Data Migration",
+      "active": true,
+      "public": false
+    },
+    {
+      "entity": "Project",
+      "id": 5,
+      "name": "Internal Audit",
+      "active": true,
+      "public": false
+    },
+    {
+      "entity": "Project",
+      "id": 12,
+      "name": "Security Review",
+      "active": true,
+      "public": false
+    }
+  ]
+}

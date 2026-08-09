@@ -1,0 +1,33 @@
+{
+  "total_results": 3,
+  "number_of_results_in_the_page": 3,
+  "items": [
+    {
+      "entity": "WorkPackage",
+      "id": 12,
+      "subject": "Phase 1 complete",
+      "status": "New",
+      "type": "Milestone",
+      "project": "Data Migration",
+      "startDate": "2026-09-15"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 106,
+      "subject": "Sign off the retention window",
+      "status": "New",
+      "type": "Milestone",
+      "project": "Data Migration",
+      "startDate": "2026-09-02"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 118,
+      "subject": "Cutover go/no-go",
+      "status": "New",
+      "type": "Milestone",
+      "project": "Data Migration",
+      "startDate": "2026-09-24"
+    }
+  ]
+}

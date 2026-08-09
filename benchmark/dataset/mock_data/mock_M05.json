@@ -1,0 +1,42 @@
+{
+  "total_results": 4,
+  "number_of_results_in_the_page": 4,
+  "items": [
+    {
+      "entity": "WorkPackage",
+      "id": 52,
+      "subject": "Add dark mode toggle",
+      "status": "New",
+      "type": "Feature",
+      "assignee": "Giulia Bianchi",
+      "dueDate": "2026-09-15"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 8,
+      "subject": "Fix checkout crash",
+      "status": "In progress",
+      "type": "Bug",
+      "assignee": "Giulia Bianchi",
+      "dueDate": "2026-09-03"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 103,
+      "subject": "Prepare rollback script",
+      "status": "New",
+      "type": "Task",
+      "assignee": "Giulia Bianchi",
+      "dueDate": "2026-09-28"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 71,
+      "subject": "Offline mode for the catalogue",
+      "status": "New",
+      "type": "Feature",
+      "assignee": "Giulia Bianchi",
+      "dueDate": "2026-09-21"
+    }
+  ]
+}

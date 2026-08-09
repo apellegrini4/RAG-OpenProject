@@ -1,0 +1,12 @@
+{
+  "intent": "create",
+  "macro_section": "work_packages",
+  "ready_to_commit": true,
+  "payload": {
+    "subject": "Broken image icons on the profile page",
+    "type": "Bug",
+    "project": "Website Migration",
+    "assignee": "Mario Rossi",
+    "description": "The CDN paths were not rewritten during the migration"
+  }
+}

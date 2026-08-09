@@ -1,0 +1,30 @@
+{
+  "total_results": 4,
+  "number_of_results_in_the_page": 4,
+  "items": [
+    {
+      "entity": "Project",
+      "id": 1,
+      "name": "Mobile App",
+      "public": true
+    },
+    {
+      "entity": "Project",
+      "id": 3,
+      "name": "Website Migration",
+      "public": true
+    },
+    {
+      "entity": "Project",
+      "id": 9,
+      "name": "Partner Portal",
+      "public": true
+    },
+    {
+      "entity": "Project",
+      "id": 11,
+      "name": "Design System",
+      "public": true
+    }
+  ]
+}

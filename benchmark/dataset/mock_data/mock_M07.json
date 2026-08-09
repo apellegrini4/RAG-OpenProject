@@ -1,0 +1,27 @@
+{
+  "total_results": 3,
+  "number_of_results_in_the_page": 3,
+  "items": [
+    {
+      "entity": "Project",
+      "id": 1,
+      "name": "Mobile App",
+      "active": true,
+      "public": true
+    },
+    {
+      "entity": "Project",
+      "id": 3,
+      "name": "Website Migration",
+      "active": true,
+      "public": true
+    },
+    {
+      "entity": "Project",
+      "id": 9,
+      "name": "Partner Portal",
+      "active": true,
+      "public": true
+    }
+  ]
+}

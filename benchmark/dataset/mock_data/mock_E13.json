@@ -1,0 +1,11 @@
+{
+  "intent": "create",
+  "macro_section": "work_packages",
+  "ready_to_commit": true,
+  "payload": {
+    "subject": "Review Q3 expense reports",
+    "type": "Task",
+    "project": "Internal Audit",
+    "description": "All receipts above 500 euro must be checked"
+  }
+}
