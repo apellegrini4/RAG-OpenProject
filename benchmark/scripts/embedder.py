@@ -8,13 +8,23 @@ import requests
 
 Vector = list[float]
 
-EMBEDDING_MODEL = "nomic-embed-text"
+EMBEDDING_MODEL = "qwen3-embedding:0.6b"
+
+#qwen3-embedding is instruction tuned, it needs the instruction in front of every text (in the generated answer and in the reference)
+INSTRUCTION = ("Given an answer produced by an assistant, retrieve the reference answer that "
+               "reports the same information")
+
+
+def with_instruction(text: str, instruction) -> str:
+    """ the prompt format qwen3-embedding expects """
+    return f"Instruct: {instruction}\nQuery: {text}" if instruction else text
 
 
 class Embedder:
 
-    def __init__(self, model: str = EMBEDDING_MODEL, host: str = None):
+    def __init__(self, model: str = EMBEDDING_MODEL, host: str = None, instruction=INSTRUCTION):
         self.model_name = model
+        self.instruction = instruction
         #the port of Ollama is standard
         self.host = host or os.getenv("OLLAMA_HOST", "http://localhost:11434")
 
@@ -23,7 +33,7 @@ class Embedder:
         for t in texts:
             resp = requests.post(
                 f"{self.host}/api/embeddings",
-                json={"model": self.model_name, "prompt": t},
+                json={"model": self.model_name, "prompt": with_instruction(t, self.instruction)},
                 timeout=120,
             )
             resp.raise_for_status()

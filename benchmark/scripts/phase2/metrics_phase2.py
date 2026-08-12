@@ -27,11 +27,11 @@ INTENTS = ["read", "create", "update", "out_of_scope"]
 CATEGORY_TO_TYPE = {"read": "read", "create": "write", "update": "write",
                     "out_of_scope": "refusal"}
 
-#decides where a bare number is allowed to count as a value
+#regex context to decide if a bare number should count as a valid value
 NUMBER_CONTEXT = (r'(?:id|ids|#|no\.?|number|work\s*packages?|wp|task|bug|feature|milestone'
                    r'|project|version|sprint)\s*#?\s*')
 
-#separates one item from the next, identifies phrases
+#separates one item from the next, identifies distinct phrases
 SEGMENT = re.compile(r'[;\n]+|(?<=[.!?])\s+')
 
 #to check if the model announces something that has not happened yet (an update or a create)
@@ -99,7 +99,7 @@ def value_coverage(generated: str, key_values) -> dict:
     if not expected:
         return {"coverage": None, "missing": []}
 
-    #dedup on the normalised form, keep the original spelling for the report
+    #deduplicates using the normalized form, but keeps the original spelling for the final report
     seen, unique = set(), []
 
     #goes through the list of expected values
@@ -227,3 +227,37 @@ def response_type_accuracy(cells: list):
     if not scored:
         return None
     return round(sum(1 for c in scored if c["response_type_ok"]) / len(scored), 4)
+
+
+QUALITY_METRICS = ["avg_cosine_similarity", "avg_value_coverage", "full_coverage_rate",
+                   "avg_item_consistency", "observable_consistency_rate",
+                   "response_type_accuracy"]
+
+
+def quality_metrics(cells: list) -> dict:
+    return {
+        "avg_cosine_similarity": avg_cosine(cells),
+        "avg_value_coverage": avg_value_coverage(cells),
+        "full_coverage_rate": full_coverage_rate(cells),
+        "avg_item_consistency": avg_item_consistency(cells),
+        "observable_consistency_rate": observable_consistency_rate(cells), #on how many cells the consistency could be observed at all
+        "response_type_accuracy": response_type_accuracy(cells),
+    }
+
+
+def summarize(model: str, cells: list) -> dict:
+    """ one row: every cell of the matrix for this model """
+    median, p90 = latency_stats([r["latency"] for r in cells])
+    return {"model": model, "cells": len(cells), **quality_metrics(cells),
+            "median_latency": median, "p90_latency": p90}
+
+
+def summarize_by_intent(model: str, cells: list) -> list:
+    """ same metrics but divided per intent """
+    rows = []
+    for intent in INTENTS:
+        subset = [r for r in cells if r["category"] == intent]
+        if subset:
+            rows.append({"model": model, "intent": intent, "cells": len(subset),
+                         **quality_metrics(subset)})
+    return rows
