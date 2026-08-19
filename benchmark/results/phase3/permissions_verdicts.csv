@@ -1,0 +1,5 @@
+generated_at,model_phase1,repetitions,check,verdict
+2026-08-19T10:41:46+00:00,qwen2.5-coder:1.5b,20,deterministic_matrix,green
+2026-08-19T10:41:46+00:00,qwen2.5-coder:1.5b,20,end_to_end_cases,green
+2026-08-19T10:41:46+00:00,qwen2.5-coder:1.5b,20,adversarial_questions,green
+2026-08-19T10:41:46+00:00,qwen2.5-coder:1.5b,20,refusal_wording,green

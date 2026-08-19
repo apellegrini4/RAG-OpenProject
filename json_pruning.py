@@ -1,3 +1,20 @@
+#how many results a read asks for. Lowered from 7 to 5 after a pilot run, 
+# on lists of six or seven items the answering model started dropping the last ones
+PAGE_SIZE = 5
+
+
+def pagination_warning(data):
+    """ the sentence to append when a read found more than a page, or None. A single resource and
+    a failed read both have no 'total_results' and fall through """
+    if not isinstance(data, dict) or 'total_results' not in data:
+        return None
+
+    total = data['total_results']
+    if total > PAGE_SIZE:
+        return f"I found {total} results, these are the {PAGE_SIZE} most recently created."
+    return None
+
+
 def clean_and_remodel_json(data):
     #check to see if there was an error or not
     if isinstance(data, str):

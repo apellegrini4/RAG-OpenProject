@@ -1,0 +1,46 @@
+{
+  "total_results": 5,
+  "number_of_results_in_the_page": 5,
+  "items": [
+    {
+      "entity": "WorkPackage",
+      "id": 101,
+      "subject": "Backend task number 1",
+      "status": "New",
+      "type": "Task",
+      "project": "Alpha"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 102,
+      "subject": "Backend task number 2",
+      "status": "New",
+      "type": "Task",
+      "project": "Beta"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 103,
+      "subject": "Backend task number 3",
+      "status": "New",
+      "type": "Task",
+      "project": "Cactus"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 104,
+      "subject": "Backend task number 4",
+      "status": "New",
+      "type": "Task",
+      "project": "Door"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 105,
+      "subject": "Backend task number 5",
+      "status": "New",
+      "type": "Task",
+      "project": "Elph"
+    }
+  ]
+}

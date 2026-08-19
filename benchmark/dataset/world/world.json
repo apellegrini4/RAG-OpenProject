@@ -1,0 +1,315 @@
+{
+  "work_packages": [
+    {
+      "id": 101,
+      "subject": "Migrate legacy customer records",
+      "status": "In progress",
+      "type": "Task",
+      "project": "Data Migration",
+      "assignee": "Giulia Bianchi"
+    },
+    {
+      "id": 102,
+      "subject": "Validate migrated schema",
+      "status": "New",
+      "type": "Task",
+      "project": "Data Migration",
+      "assignee": "Giulia Bianchi",
+      "author": "Mario Rossi",
+      "dueDate": "2026-08-19"
+    },
+    {
+      "id": 103,
+      "subject": "Prepare rollback script",
+      "status": "New",
+      "type": "Task",
+      "project": "Data Migration",
+      "assignee": "Giulia Bianchi",
+      "dueDate": "2026-09-28"
+    },
+    {
+      "id": 104,
+      "subject": "Archive the 2019 exports",
+      "status": "Closed",
+      "type": "Task",
+      "project": "Data Migration",
+      "assignee": "Alba Pellegrini"
+    },
+    {
+      "id": 105,
+      "subject": "Dry-run the cutover",
+      "status": "New",
+      "type": "Task",
+      "project": "Data Migration",
+      "assignee": "Giulia Bianchi",
+      "startDate": "2026-08-19",
+      "version": "Sprint 2",
+      "author": "Giulia Bianchi"
+    },
+    {
+      "id": 106,
+      "subject": "Sign off the retention window",
+      "status": "New",
+      "type": "Milestone",
+      "project": "Data Migration",
+      "assignee": "Alba Pellegrini",
+      "version": "Sprint 3",
+      "percentageDone": 0,
+      "startDate": "2026-09-02"
+    },
+    {
+      "id": 107,
+      "subject": "Reconcile duplicate accounts",
+      "status": "In progress",
+      "type": "Bug",
+      "project": "Data Migration",
+      "assignee": "Mario Rossi",
+      "priority": "Normal"
+    },
+    {
+      "id": 8,
+      "subject": "Fix checkout crash",
+      "status": "In progress",
+      "type": "Bug",
+      "assignee": "Giulia Bianchi",
+      "project": "Mobile App",
+      "priority": "Immediate",
+      "dueDate": "2026-09-03",
+      "author": "Mario Rossi"
+    },
+    {
+      "id": 52,
+      "subject": "Add dark mode toggle",
+      "status": "New",
+      "type": "Feature",
+      "assignee": "Giulia Bianchi",
+      "project": "Mobile App",
+      "startDate": "2026-09-07",
+      "priority": "High",
+      "version": "Sprint 2",
+      "author": "Giulia Bianchi",
+      "dueDate": "2026-09-15"
+    },
+    {
+      "id": 64,
+      "subject": "Cart empties on refresh",
+      "status": "New",
+      "type": "Bug",
+      "assignee": "Giulia Bianchi",
+      "project": "Mobile App",
+      "priority": "High",
+      "dueDate": "2026-10-03",
+      "percentageDone": 100,
+      "startDate": "2026-09-07",
+      "version": "Sprint 2",
+      "author": "Giulia Bianchi"
+    },
+    {
+      "id": 71,
+      "subject": "Offline mode for the catalogue",
+      "status": "New",
+      "type": "Feature",
+      "assignee": "Giulia Bianchi",
+      "project": "Mobile App",
+      "startDate": "2026-09-07",
+      "priority": "High",
+      "dueDate": "2026-10-15"
+    },
+    {
+      "id": 33,
+      "subject": "Payment retry logic",
+      "status": "New",
+      "type": "Task",
+      "author": "Mario Rossi",
+      "project": "Mobile App",
+      "assignee": "Giulia Bianchi",
+      "dueDate": "2026-08-19"
+    },
+    {
+      "id": 41,
+      "subject": "Login page fails to redirect",
+      "status": "New",
+      "type": "Bug",
+      "author": "Mario Rossi",
+      "project": "Website Migration",
+      "priority": "High",
+      "assignee": "Mario Rossi"
+    },
+    {
+      "id": 87,
+      "subject": "Review Q3 expense reports",
+      "status": "New",
+      "type": "Task",
+      "author": "Mario Rossi",
+      "project": "Internal Audit",
+      "dueDate": "2026-08-17",
+      "percentageDone": 100
+    },
+    {
+      "id": 19,
+      "subject": "Push rollback script",
+      "status": "In progress",
+      "type": "Task",
+      "author": "Mario Rossi",
+      "project": "Data Migration",
+      "dueDate": "2026-08-17"
+    },
+    {
+      "id": 55,
+      "subject": "Broken image icons on the profile page",
+      "status": "New",
+      "type": "Bug",
+      "project": "Website Migration",
+      "priority": "Low",
+      "assignee": "Mario Rossi"
+    },
+    {
+      "id": 23,
+      "subject": "Signature field missing",
+      "status": "Confirmed",
+      "type": "Bug",
+      "project": "Internal Audit",
+      "priority": "High"
+    },
+    {
+      "id": 46,
+      "subject": "Publish the release notes",
+      "status": "New",
+      "type": "Task",
+      "dueDate": "2026-08-17",
+      "project": "Website Migration",
+      "assignee": "Alba Pellegrini"
+    },
+    {
+      "id": 12,
+      "subject": "Phase 1 complete",
+      "status": "New",
+      "type": "Milestone",
+      "dueDate": "2026-08-04",
+      "project": "Data Migration",
+      "startDate": "2026-09-15",
+      "assignee": "Alba Pellegrini"
+    },
+    {
+      "id": 27,
+      "subject": "Prepare vendor onboarding docs",
+      "status": "New",
+      "type": "Task",
+      "startDate": "2026-08-19",
+      "project": "Website Migration"
+    },
+    {
+      "id": 90,
+      "subject": "Design new onboarding flow",
+      "status": "New",
+      "type": "Task",
+      "startDate": "2026-08-19",
+      "project": "Website Migration",
+      "version": "Sprint 3",
+      "assignee": "Alba Pellegrini",
+      "percentageDone": 0
+    },
+    {
+      "id": 43,
+      "subject": "Login crash on Android",
+      "status": "In progress",
+      "type": "Bug",
+      "priority": "Immediate",
+      "project": "Mobile App"
+    },
+    {
+      "id": 58,
+      "subject": "Login form accepts empty password",
+      "status": "Closed",
+      "type": "Bug",
+      "project": "Mobile App"
+    },
+    {
+      "id": 118,
+      "subject": "Cutover go/no-go",
+      "status": "New",
+      "type": "Milestone",
+      "project": "Data Migration",
+      "startDate": "2026-09-24"
+    },
+    {
+      "id": 78,
+      "subject": "Rollback script cleanup",
+      "status": "In progress",
+      "type": "Task",
+      "version": "Sprint 2",
+      "author": "Giulia Bianchi",
+      "project": "Mobile App"
+    },
+    {
+      "id": 15,
+      "subject": "Import the 2024 invoices",
+      "status": "In progress",
+      "type": "Task",
+      "project": "Data Migration",
+      "assignee": "Giulia Bianchi",
+      "priority": "Normal"
+    },
+    {
+      "id": 63,
+      "subject": "Update the vendor contact list",
+      "status": "New",
+      "type": "Task",
+      "project": "Mobile App",
+      "assignee": "Giulia Bianchi",
+      "priority": "Normal"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Mobile App",
+      "active": true,
+      "public": true
+    },
+    {
+      "name": "Data Migration",
+      "active": true,
+      "public": true
+    },
+    {
+      "name": "Website Migration",
+      "active": true,
+      "public": true
+    },
+    {
+      "name": "Internal Audit",
+      "active": true,
+      "public": false
+    },
+    {
+      "name": "Partner Portal",
+      "active": true,
+      "public": true
+    },
+    {
+      "name": "Design System",
+      "public": true
+    },
+    {
+      "name": "Security Review",
+      "active": true,
+      "public": false
+    },
+    {
+      "name": "Website Migration 2024",
+      "active": false
+    }
+  ],
+  "project_ids": {
+    "1": "Mobile App",
+    "2": "Data Migration",
+    "3": "Website Migration",
+    "4": "Data Migration",
+    "5": "Internal Audit",
+    "6": "Design System",
+    "7": "Internal Audit",
+    "9": "Partner Portal",
+    "11": "Design System",
+    "12": "Security Review"
+  }
+}

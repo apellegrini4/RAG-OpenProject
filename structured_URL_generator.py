@@ -6,8 +6,10 @@ from langchain_core.output_parsers import JsonOutputParser
 
 from llm_builder import build_llm
 from structural_validation import normalize_value, schema_validation, resolve_date_filter, DATE_FIELDS
+from json_pruning import PAGE_SIZE
+from debug import debug_log
 from request_helpers import (
-    API_V3, api_key,
+    API_V3, http_error_message, LookupFailed,
     create_ID_map, validate_project_selector, validate_workpack_selector,
     workpack_body_builder, project_body_builder,
     project_patch, workpack_patch,
@@ -138,7 +140,7 @@ def define_urlConstructor_chain(model_name):
 ALLOWED_MACRO_SECTIONS = {"projects", "work_packages"}
 
 #function to construct the request for the READ intent
-def build_read_request(json_data) -> dict:
+def build_read_request(json_data, api_key) -> dict:
     if isinstance(json_data, dict) and 'properties' in json_data: #all the data are stored by default in the section properties of the json
         json_data = json_data['properties']
 
@@ -193,7 +195,10 @@ def build_read_request(json_data) -> dict:
             continue
 
         if key in f_need_map:
-            dict_f = create_ID_map(key) #creates the dictionary only if it's needed
+            try:
+                dict_f = create_ID_map(key, api_key) #creates the dictionary only if it's needed
+            except LookupFailed as failure:
+                return failure.system_info
 
             #every key has a list (it can be null, of 1 element or more)
             for v in val_list:
@@ -229,18 +234,19 @@ def build_read_request(json_data) -> dict:
         errors = ", ".join(missing_entities)
         return f"System Info: these entities requested by the user do not exist. {errors}."
 
+    #pageSize and sortBy ALWAYS applied
+    params = {"pageSize": str(PAGE_SIZE), "sortBy": '[["createdAt","desc"]]'}
     if op_filters:
-        json_string = json.dumps(op_filters)
-        req = requests.Request('GET', base_url, params={"filters": json_string, 'sortBy':'[["createdAt","desc"]]'}) #to obtain the most recent results
-        final_url = req.prepare().url
-    else:
-        final_url = base_url
+        params["filters"] = json.dumps(op_filters)
+
+    req = requests.Request('GET', base_url, params=params)
+    final_url = req.prepare().url
 
     return {"method": "GET", "url": final_url}
 
 
 #function to construct the request for the CREATE intent
-def build_create_request(json_data) -> dict:
+def build_create_request(json_data, api_key) -> dict:
     if isinstance(json_data, dict) and 'properties' in json_data:
         json_data = json_data['properties']
 
@@ -259,7 +265,7 @@ def build_create_request(json_data) -> dict:
         return "System Info: no fields provided to create the item."
 
     if macro_section == 'projects':
-        body, missing_entities = project_body_builder(payload)
+        body, missing_entities = project_body_builder(payload)   # no lookups: nothing to fail
         if missing_entities:
             errors = ", ".join(missing_entities)
             return f"System Info: these entities requested by the user do not exist. {errors}."
@@ -274,22 +280,28 @@ def build_create_request(json_data) -> dict:
 
     #checks if the project exists
     project_name = project_values[0]
-    project_map = create_ID_map('project')
-    project_id = project_map.get(normalize_value(project_name))
-    if project_id is None:
-        return f"System Info: project '{project_name}' does not exist."
+    try:
+        project_map = create_ID_map('project', api_key)
+        project_id = project_map.get(normalize_value(project_name))
+        if project_id is None:
+            return f"System Info: project '{project_name}' does not exist."
 
-    body, missing_entities = workpack_body_builder(payload)
+        body, missing_entities = workpack_body_builder(payload, api_key)
+    except LookupFailed as failure:
+        return failure.system_info
     if missing_entities:
         errors = ", ".join(missing_entities)
         return f"System Info: these entities requested by the user do not exist. {errors}."
+
+    #In the commit_href returned by OP from /form the url doesn't contain an explicit link to the project, it needs to be setted manually
+    body.setdefault('_links', {})['project'] = {"href": f"{API_V3}projects/{project_id}"}
 
     url = f"{API_V3}workspaces/{project_id}/work_packages"
     return {"method": "POST", "url": url, "body": body}
 
 
 #function to construct the request for the UPDATE intent
-def build_update_request(json_data) -> dict:
+def build_update_request(json_data, api_key) -> dict:
     if isinstance(json_data, dict) and 'properties' in json_data:
         json_data = json_data['properties']
 
@@ -309,7 +321,10 @@ def build_update_request(json_data) -> dict:
         return "System Info: no fields provided to update"
 
     if macro_section == 'projects':
-        project_id, error = validate_project_selector(selector)
+        try:
+            project_id, error = validate_project_selector(selector, api_key)
+        except LookupFailed as failure:
+            return failure.system_info
         if error:
             return error
         get_url = f"{API_V3}projects/{project_id}"
@@ -328,7 +343,7 @@ def build_update_request(json_data) -> dict:
 
 
 #function that does the actual request (it is only reached with a real url)
-def fetch_openproject_data(final_url):
+def fetch_openproject_data(final_url, api_key):
     try:
         response = requests.get(final_url, auth=('apikey', api_key))
         response.raise_for_status() #to check for example the case of invalid filter values
@@ -341,10 +356,12 @@ def fetch_openproject_data(final_url):
         return data
 
     except requests.exceptions.HTTPError:
-        if response.status_code == 400:
-            return "System Info: invalid parameters or unsufficient permissions"
-        else:
-            return f"System Info: communication error, error: {response.status_code})."
+        #the body of an error response is kept, behind the DEBUG flag, so it is there the next time without a code change
+        debug_log("openproject error status", response.status_code)
+        debug_log("openproject error headers", dict(response.headers))
+        debug_log("openproject error body", response.text[:1000])
+
+        return http_error_message(response.status_code)
 
     except Exception as e:
         return f"Error: {e}"

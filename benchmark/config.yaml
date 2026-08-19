@@ -8,6 +8,7 @@ temperature_phase2: 0.6
 
 seed: 42
 repetitions_latency: 30
+repetitions_phase3: 20
 
 #max tokens generated per call
 num_predict: 512
@@ -16,8 +17,9 @@ repeat_penalty: 1.0
 
 #paths
 paths:
-  questions: "benchmark/dataset/questions_90.jsonl"
+  questions: "benchmark/dataset/questions_99.jsonl"
   answers: "benchmark/dataset/answers/ideal_answers.jsonl"
+  answers_phase3: "benchmark/dataset/answers/ideal_answers_99.jsonl"
   mock_data: "benchmark/dataset/mock_data"
   runs: "benchmark/runs"
   results: "benchmark/results"

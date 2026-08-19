@@ -1,0 +1,937 @@
+{
+  "instance": "https://tesii-alba.openproject.com/",
+  "users": {
+    "alba.pellegrini": {
+      "key_env_var": "OP_API_KEY",
+      "identity": {
+        "status": 200,
+        "id": 4,
+        "login": "albapellegrini04+1@gmail.com",
+        "name": "Alba Pellegrini",
+        "admin": true
+      },
+      "memberships": {
+        "status": 200,
+        "total": 2,
+        "memberships": [
+          {
+            "project_title": "Scrum project",
+            "project_href": "/api/v3/projects/2",
+            "roles": [
+              "Project admin"
+            ]
+          },
+          {
+            "project_title": "Demo project",
+            "project_href": "/api/v3/projects/1",
+            "roles": [
+              "Project admin"
+            ]
+          }
+        ]
+      },
+      "capabilities": {
+        "status": 200,
+        "total": 308,
+        "count_returned": 308,
+        "truncated": false,
+        "contexts": {
+          "Demo project (1)": [
+            "boards/create",
+            "boards/destroy",
+            "boards/read",
+            "boards/update",
+            "file_links/manage",
+            "file_links/view",
+            "internal_comments/create",
+            "internal_comments/read",
+            "internal_comments/update_others",
+            "internal_comments/update_own",
+            "meeting_agenda_items/create",
+            "meeting_agenda_items/destroy",
+            "meeting_agenda_items/update",
+            "meeting_outcomes/create",
+            "meeting_outcomes/destroy",
+            "meeting_outcomes/update",
+            "meetings/create",
+            "meetings/destroy",
+            "meetings/read",
+            "meetings/update",
+            "memberships/create",
+            "memberships/destroy",
+            "memberships/read",
+            "memberships/update",
+            "projects/copy",
+            "projects/update",
+            "queries/create",
+            "team_planners/create",
+            "team_planners/destroy",
+            "team_planners/read",
+            "team_planners/update",
+            "time_entries/create",
+            "time_entries/create_own",
+            "time_entries/destroy",
+            "time_entries/destroy_own",
+            "time_entries/edit",
+            "time_entries/edit_own",
+            "time_entries/read",
+            "time_entries/read_own",
+            "wiki_page_links/manage",
+            "work_package_attachments/create",
+            "work_package_shares/index",
+            "work_packages/assigned",
+            "work_packages/copy",
+            "work_packages/create",
+            "work_packages/move",
+            "work_packages/read",
+            "work_packages/update"
+          ],
+          "Scrum project (2)": [
+            "boards/create",
+            "boards/destroy",
+            "boards/read",
+            "boards/update",
+            "file_links/manage",
+            "file_links/view",
+            "internal_comments/create",
+            "internal_comments/read",
+            "internal_comments/update_others",
+            "internal_comments/update_own",
+            "meeting_agenda_items/create",
+            "meeting_agenda_items/destroy",
+            "meeting_agenda_items/update",
+            "meeting_outcomes/create",
+            "meeting_outcomes/destroy",
+            "meeting_outcomes/update",
+            "meetings/create",
+            "meetings/destroy",
+            "meetings/read",
+            "meetings/update",
+            "memberships/create",
+            "memberships/destroy",
+            "memberships/read",
+            "memberships/update",
+            "projects/copy",
+            "projects/update",
+            "queries/create",
+            "wiki_page_links/manage",
+            "work_package_attachments/create",
+            "work_package_shares/index",
+            "work_packages/assigned",
+            "work_packages/copy",
+            "work_packages/create",
+            "work_packages/move",
+            "work_packages/read",
+            "work_packages/update"
+          ],
+          "SANDBOX (3)": [
+            "boards/create",
+            "boards/destroy",
+            "boards/read",
+            "boards/update",
+            "file_links/manage",
+            "file_links/view",
+            "internal_comments/create",
+            "internal_comments/read",
+            "internal_comments/update_others",
+            "internal_comments/update_own",
+            "meeting_agenda_items/create",
+            "meeting_agenda_items/destroy",
+            "meeting_agenda_items/update",
+            "meeting_outcomes/create",
+            "meeting_outcomes/destroy",
+            "meeting_outcomes/update",
+            "meetings/create",
+            "meetings/destroy",
+            "meetings/read",
+            "meetings/update",
+            "memberships/create",
+            "memberships/destroy",
+            "memberships/read",
+            "memberships/update",
+            "projects/copy",
+            "projects/update",
+            "queries/create",
+            "time_entries/create",
+            "time_entries/create_own",
+            "time_entries/destroy",
+            "time_entries/destroy_own",
+            "time_entries/edit",
+            "time_entries/edit_own",
+            "time_entries/read",
+            "time_entries/read_own",
+            "wiki_page_links/manage",
+            "work_package_attachments/create",
+            "work_package_shares/index",
+            "work_packages/copy",
+            "work_packages/create",
+            "work_packages/move",
+            "work_packages/read",
+            "work_packages/update"
+          ],
+          "Mobile App (4)": [
+            "boards/create",
+            "boards/destroy",
+            "boards/read",
+            "boards/update",
+            "file_links/manage",
+            "file_links/view",
+            "internal_comments/create",
+            "internal_comments/read",
+            "internal_comments/update_others",
+            "internal_comments/update_own",
+            "meeting_agenda_items/create",
+            "meeting_agenda_items/destroy",
+            "meeting_agenda_items/update",
+            "meeting_outcomes/create",
+            "meeting_outcomes/destroy",
+            "meeting_outcomes/update",
+            "meetings/create",
+            "meetings/destroy",
+            "meetings/read",
+            "meetings/update",
+            "memberships/create",
+            "memberships/destroy",
+            "memberships/read",
+            "memberships/update",
+            "projects/copy",
+            "projects/update",
+            "queries/create",
+            "time_entries/create",
+            "time_entries/create_own",
+            "time_entries/destroy",
+            "time_entries/destroy_own",
+            "time_entries/edit",
+            "time_entries/edit_own",
+            "time_entries/read",
+            "time_entries/read_own",
+            "wiki_page_links/manage",
+            "work_package_attachments/create",
+            "work_package_shares/index",
+            "work_packages/copy",
+            "work_packages/create",
+            "work_packages/move",
+            "work_packages/read",
+            "work_packages/update"
+          ],
+          "Data Migration (5)": [
+            "boards/create",
+            "boards/destroy",
+            "boards/read",
+            "boards/update",
+            "file_links/manage",
+            "file_links/view",
+            "internal_comments/create",
+            "internal_comments/read",
+            "internal_comments/update_others",
+            "internal_comments/update_own",
+            "meeting_agenda_items/create",
+            "meeting_agenda_items/destroy",
+            "meeting_agenda_items/update",
+            "meeting_outcomes/create",
+            "meeting_outcomes/destroy",
+            "meeting_outcomes/update",
+            "meetings/create",
+            "meetings/destroy",
+            "meetings/read",
+            "meetings/update",
+            "memberships/create",
+            "memberships/destroy",
+            "memberships/read",
+            "memberships/update",
+            "projects/copy",
+            "projects/update",
+            "queries/create",
+            "time_entries/create",
+            "time_entries/create_own",
+            "time_entries/destroy",
+            "time_entries/destroy_own",
+            "time_entries/edit",
+            "time_entries/edit_own",
+            "time_entries/read",
+            "time_entries/read_own",
+            "wiki_page_links/manage",
+            "work_package_attachments/create",
+            "work_package_shares/index",
+            "work_packages/copy",
+            "work_packages/create",
+            "work_packages/move",
+            "work_packages/read",
+            "work_packages/update"
+          ],
+          "Website Migration (6)": [
+            "boards/create",
+            "boards/destroy",
+            "boards/read",
+            "boards/update",
+            "file_links/manage",
+            "file_links/view",
+            "internal_comments/create",
+            "internal_comments/read",
+            "internal_comments/update_others",
+            "internal_comments/update_own",
+            "meeting_agenda_items/create",
+            "meeting_agenda_items/destroy",
+            "meeting_agenda_items/update",
+            "meeting_outcomes/create",
+            "meeting_outcomes/destroy",
+            "meeting_outcomes/update",
+            "meetings/create",
+            "meetings/destroy",
+            "meetings/read",
+            "meetings/update",
+            "memberships/create",
+            "memberships/destroy",
+            "memberships/read",
+            "memberships/update",
+            "projects/copy",
+            "projects/update",
+            "queries/create",
+            "time_entries/create",
+            "time_entries/create_own",
+            "time_entries/destroy",
+            "time_entries/destroy_own",
+            "time_entries/edit",
+            "time_entries/edit_own",
+            "time_entries/read",
+            "time_entries/read_own",
+            "wiki_page_links/manage",
+            "work_package_attachments/create",
+            "work_package_shares/index",
+            "work_packages/copy",
+            "work_packages/create",
+            "work_packages/move",
+            "work_packages/read",
+            "work_packages/update"
+          ],
+          "Internal Audit (7)": [
+            "boards/create",
+            "boards/destroy",
+            "boards/read",
+            "boards/update",
+            "file_links/manage",
+            "file_links/view",
+            "internal_comments/create",
+            "internal_comments/read",
+            "internal_comments/update_others",
+            "internal_comments/update_own",
+            "meeting_agenda_items/create",
+            "meeting_agenda_items/destroy",
+            "meeting_agenda_items/update",
+            "meeting_outcomes/create",
+            "meeting_outcomes/destroy",
+            "meeting_outcomes/update",
+            "meetings/create",
+            "meetings/destroy",
+            "meetings/read",
+            "meetings/update",
+            "memberships/create",
+            "memberships/destroy",
+            "memberships/read",
+            "memberships/update",
+            "projects/copy",
+            "projects/update",
+            "queries/create",
+            "time_entries/create",
+            "time_entries/create_own",
+            "time_entries/destroy",
+            "time_entries/destroy_own",
+            "time_entries/edit",
+            "time_entries/edit_own",
+            "time_entries/read",
+            "time_entries/read_own",
+            "wiki_page_links/manage",
+            "work_package_attachments/create",
+            "work_package_shares/index",
+            "work_packages/copy",
+            "work_packages/create",
+            "work_packages/move",
+            "work_packages/read",
+            "work_packages/update"
+          ],
+          "GLOBALE": [
+            "placeholder_users/create",
+            "placeholder_users/read",
+            "placeholder_users/update",
+            "portfolios/create",
+            "programs/create",
+            "projects/create",
+            "users/create",
+            "users/read",
+            "users/update"
+          ]
+        },
+        "all_actions_seen": [
+          "boards/create",
+          "boards/destroy",
+          "boards/read",
+          "boards/update",
+          "file_links/manage",
+          "file_links/view",
+          "internal_comments/create",
+          "internal_comments/read",
+          "internal_comments/update_others",
+          "internal_comments/update_own",
+          "meeting_agenda_items/create",
+          "meeting_agenda_items/destroy",
+          "meeting_agenda_items/update",
+          "meeting_outcomes/create",
+          "meeting_outcomes/destroy",
+          "meeting_outcomes/update",
+          "meetings/create",
+          "meetings/destroy",
+          "meetings/read",
+          "meetings/update",
+          "memberships/create",
+          "memberships/destroy",
+          "memberships/read",
+          "memberships/update",
+          "placeholder_users/create",
+          "placeholder_users/read",
+          "placeholder_users/update",
+          "portfolios/create",
+          "programs/create",
+          "projects/copy",
+          "projects/create",
+          "projects/update",
+          "queries/create",
+          "team_planners/create",
+          "team_planners/destroy",
+          "team_planners/read",
+          "team_planners/update",
+          "time_entries/create",
+          "time_entries/create_own",
+          "time_entries/destroy",
+          "time_entries/destroy_own",
+          "time_entries/edit",
+          "time_entries/edit_own",
+          "time_entries/read",
+          "time_entries/read_own",
+          "users/create",
+          "users/read",
+          "users/update",
+          "wiki_page_links/manage",
+          "work_package_attachments/create",
+          "work_package_shares/index",
+          "work_packages/assigned",
+          "work_packages/copy",
+          "work_packages/create",
+          "work_packages/move",
+          "work_packages/read",
+          "work_packages/update"
+        ],
+        "work_package_actions_seen": [
+          "work_packages/assigned",
+          "work_packages/copy",
+          "work_packages/create",
+          "work_packages/move",
+          "work_packages/read",
+          "work_packages/update"
+        ],
+        "project_actions_seen": [
+          "projects/copy",
+          "projects/create",
+          "projects/update"
+        ]
+      },
+      "support_lists": {
+        "users": {
+          "status": 200,
+          "total": 3,
+          "returned": 3,
+          "sample_names": [
+            "Mario Rossi",
+            "Giulia Bianchi",
+            "Alba Pellegrini"
+          ]
+        },
+        "statuses": {
+          "status": 200,
+          "total": 14,
+          "returned": 14,
+          "sample_names": [
+            "New",
+            "In specification",
+            "Specified",
+            "Confirmed",
+            "To be scheduled"
+          ]
+        },
+        "types": {
+          "status": 200,
+          "total": 7,
+          "returned": 7,
+          "sample_names": [
+            "Task",
+            "Milestone",
+            "Summary task",
+            "Feature",
+            "Epic"
+          ]
+        },
+        "priorities": {
+          "status": 200,
+          "total": 4,
+          "returned": 4,
+          "sample_names": [
+            "Low",
+            "Normal",
+            "High",
+            "Immediate"
+          ]
+        },
+        "versions": {
+          "status": 200,
+          "total": 4,
+          "returned": 4,
+          "sample_names": [
+            "Sprint 2",
+            "Sprint 1",
+            "Product Backlog",
+            "Bug Backlog"
+          ]
+        },
+        "projects": {
+          "status": 200,
+          "total": 7,
+          "returned": 7,
+          "sample_names": [
+            "Internal Audit",
+            "Website Migration",
+            "Data Migration",
+            "Mobile App",
+            "SANDBOX"
+          ]
+        }
+      }
+    },
+    "mario.rossi": {
+      "key_env_var": "OP_API_KEY_MARIO",
+      "identity": {
+        "status": 200,
+        "id": 6,
+        "login": "albapellegrini04+mario@gmail.com",
+        "name": "Mario Rossi",
+        "admin": null
+      },
+      "memberships": {
+        "status": 200,
+        "total": 0,
+        "memberships": []
+      },
+      "capabilities": {
+        "status": 200,
+        "total": 36,
+        "count_returned": 36,
+        "truncated": false,
+        "contexts": {
+          "Demo project (1)": [
+            "boards/read",
+            "file_links/view",
+            "work_packages/read"
+          ],
+          "Scrum project (2)": [
+            "boards/read",
+            "file_links/view",
+            "work_packages/read"
+          ],
+          "SANDBOX (3)": [
+            "boards/read",
+            "file_links/view",
+            "meetings/read",
+            "queries/create",
+            "work_package_shares/index",
+            "work_packages/read"
+          ],
+          "Mobile App (4)": [
+            "boards/read",
+            "file_links/view",
+            "meetings/read",
+            "queries/create",
+            "work_package_shares/index",
+            "work_packages/read"
+          ],
+          "Data Migration (5)": [
+            "boards/read",
+            "file_links/view",
+            "meetings/read",
+            "queries/create",
+            "work_package_shares/index",
+            "work_packages/read"
+          ],
+          "Website Migration (6)": [
+            "boards/read",
+            "file_links/view",
+            "meetings/read",
+            "queries/create",
+            "work_package_shares/index",
+            "work_packages/read"
+          ],
+          "Internal Audit (7)": [
+            "boards/read",
+            "file_links/view",
+            "meetings/read",
+            "queries/create",
+            "work_package_shares/index",
+            "work_packages/read"
+          ]
+        },
+        "all_actions_seen": [
+          "boards/read",
+          "file_links/view",
+          "meetings/read",
+          "queries/create",
+          "work_package_shares/index",
+          "work_packages/read"
+        ],
+        "work_package_actions_seen": [
+          "work_packages/read"
+        ],
+        "project_actions_seen": []
+      },
+      "support_lists": {
+        "users": {
+          "status": 403,
+          "total": null,
+          "returned": 0,
+          "sample_names": [],
+          "error": {
+            "_type": "Error",
+            "errorIdentifier": "urn:openproject-org:api:v3:errors:MissingPermission",
+            "message": "You are not authorized to access this resource."
+          }
+        },
+        "statuses": {
+          "status": 200,
+          "total": 14,
+          "returned": 14,
+          "sample_names": [
+            "New",
+            "In specification",
+            "Specified",
+            "Confirmed",
+            "To be scheduled"
+          ]
+        },
+        "types": {
+          "status": 200,
+          "total": 7,
+          "returned": 7,
+          "sample_names": [
+            "Task",
+            "Milestone",
+            "Summary task",
+            "Feature",
+            "Epic"
+          ]
+        },
+        "priorities": {
+          "status": 200,
+          "total": 4,
+          "returned": 4,
+          "sample_names": [
+            "Low",
+            "Normal",
+            "High",
+            "Immediate"
+          ]
+        },
+        "versions": {
+          "status": 200,
+          "total": 4,
+          "returned": 4,
+          "sample_names": [
+            "Sprint 2",
+            "Sprint 1",
+            "Product Backlog",
+            "Bug Backlog"
+          ]
+        },
+        "projects": {
+          "status": 200,
+          "total": 7,
+          "returned": 7,
+          "sample_names": [
+            "Internal Audit",
+            "Website Migration",
+            "Data Migration",
+            "Mobile App",
+            "SANDBOX"
+          ]
+        }
+      }
+    },
+    "giulia.bianchi": {
+      "key_env_var": "OP_API_KEY_GIULIA",
+      "identity": {
+        "status": 200,
+        "id": 5,
+        "login": "albapellegrini04+giulia@gmail.com",
+        "name": "Giulia Bianchi",
+        "admin": null
+      },
+      "memberships": {
+        "status": 200,
+        "total": 2,
+        "memberships": [
+          {
+            "project_title": "Mobile App",
+            "project_href": "/api/v3/projects/4",
+            "roles": [
+              "Member"
+            ]
+          },
+          {
+            "project_title": "Data Migration",
+            "project_href": "/api/v3/projects/5",
+            "roles": [
+              "Member"
+            ]
+          }
+        ]
+      },
+      "capabilities": {
+        "status": 200,
+        "total": 94,
+        "count_returned": 94,
+        "truncated": false,
+        "contexts": {
+          "Mobile App (4)": [
+            "boards/create",
+            "boards/destroy",
+            "boards/read",
+            "boards/update",
+            "file_links/manage",
+            "file_links/view",
+            "internal_comments/create",
+            "internal_comments/read",
+            "internal_comments/update_own",
+            "meeting_agenda_items/create",
+            "meeting_agenda_items/destroy",
+            "meeting_agenda_items/update",
+            "meeting_outcomes/create",
+            "meeting_outcomes/destroy",
+            "meeting_outcomes/update",
+            "meetings/create",
+            "meetings/destroy",
+            "meetings/read",
+            "meetings/update",
+            "memberships/read",
+            "queries/create",
+            "time_entries/create_own",
+            "time_entries/destroy_own",
+            "time_entries/edit_own",
+            "time_entries/read",
+            "time_entries/read_own",
+            "wiki_page_links/manage",
+            "work_package_attachments/create",
+            "work_package_shares/index",
+            "work_packages/assigned",
+            "work_packages/copy",
+            "work_packages/create",
+            "work_packages/move",
+            "work_packages/read",
+            "work_packages/update"
+          ],
+          "Data Migration (5)": [
+            "boards/create",
+            "boards/destroy",
+            "boards/read",
+            "boards/update",
+            "file_links/manage",
+            "file_links/view",
+            "internal_comments/create",
+            "internal_comments/read",
+            "internal_comments/update_own",
+            "meeting_agenda_items/create",
+            "meeting_agenda_items/destroy",
+            "meeting_agenda_items/update",
+            "meeting_outcomes/create",
+            "meeting_outcomes/destroy",
+            "meeting_outcomes/update",
+            "meetings/create",
+            "meetings/destroy",
+            "meetings/read",
+            "meetings/update",
+            "memberships/read",
+            "queries/create",
+            "time_entries/create_own",
+            "time_entries/destroy_own",
+            "time_entries/edit_own",
+            "time_entries/read",
+            "time_entries/read_own",
+            "wiki_page_links/manage",
+            "work_package_attachments/create",
+            "work_package_shares/index",
+            "work_packages/assigned",
+            "work_packages/copy",
+            "work_packages/create",
+            "work_packages/move",
+            "work_packages/read",
+            "work_packages/update"
+          ],
+          "Demo project (1)": [
+            "boards/read",
+            "file_links/view",
+            "work_packages/read"
+          ],
+          "Scrum project (2)": [
+            "boards/read",
+            "file_links/view",
+            "work_packages/read"
+          ],
+          "SANDBOX (3)": [
+            "boards/read",
+            "file_links/view",
+            "meetings/read",
+            "queries/create",
+            "work_package_shares/index",
+            "work_packages/read"
+          ],
+          "Website Migration (6)": [
+            "boards/read",
+            "file_links/view",
+            "meetings/read",
+            "queries/create",
+            "work_package_shares/index",
+            "work_packages/read"
+          ],
+          "Internal Audit (7)": [
+            "boards/read",
+            "file_links/view",
+            "meetings/read",
+            "queries/create",
+            "work_package_shares/index",
+            "work_packages/read"
+          ]
+        },
+        "all_actions_seen": [
+          "boards/create",
+          "boards/destroy",
+          "boards/read",
+          "boards/update",
+          "file_links/manage",
+          "file_links/view",
+          "internal_comments/create",
+          "internal_comments/read",
+          "internal_comments/update_own",
+          "meeting_agenda_items/create",
+          "meeting_agenda_items/destroy",
+          "meeting_agenda_items/update",
+          "meeting_outcomes/create",
+          "meeting_outcomes/destroy",
+          "meeting_outcomes/update",
+          "meetings/create",
+          "meetings/destroy",
+          "meetings/read",
+          "meetings/update",
+          "memberships/read",
+          "queries/create",
+          "time_entries/create_own",
+          "time_entries/destroy_own",
+          "time_entries/edit_own",
+          "time_entries/read",
+          "time_entries/read_own",
+          "wiki_page_links/manage",
+          "work_package_attachments/create",
+          "work_package_shares/index",
+          "work_packages/assigned",
+          "work_packages/copy",
+          "work_packages/create",
+          "work_packages/move",
+          "work_packages/read",
+          "work_packages/update"
+        ],
+        "work_package_actions_seen": [
+          "work_packages/assigned",
+          "work_packages/copy",
+          "work_packages/create",
+          "work_packages/move",
+          "work_packages/read",
+          "work_packages/update"
+        ],
+        "project_actions_seen": []
+      },
+      "support_lists": {
+        "users": {
+          "status": 403,
+          "total": null,
+          "returned": 0,
+          "sample_names": [],
+          "error": {
+            "_type": "Error",
+            "errorIdentifier": "urn:openproject-org:api:v3:errors:MissingPermission",
+            "message": "You are not authorized to access this resource."
+          }
+        },
+        "statuses": {
+          "status": 200,
+          "total": 14,
+          "returned": 14,
+          "sample_names": [
+            "New",
+            "In specification",
+            "Specified",
+            "Confirmed",
+            "To be scheduled"
+          ]
+        },
+        "types": {
+          "status": 200,
+          "total": 7,
+          "returned": 7,
+          "sample_names": [
+            "Task",
+            "Milestone",
+            "Summary task",
+            "Feature",
+            "Epic"
+          ]
+        },
+        "priorities": {
+          "status": 200,
+          "total": 4,
+          "returned": 4,
+          "sample_names": [
+            "Low",
+            "Normal",
+            "High",
+            "Immediate"
+          ]
+        },
+        "versions": {
+          "status": 200,
+          "total": 4,
+          "returned": 4,
+          "sample_names": [
+            "Sprint 2",
+            "Sprint 1",
+            "Product Backlog",
+            "Bug Backlog"
+          ]
+        },
+        "projects": {
+          "status": 200,
+          "total": 7,
+          "returned": 7,
+          "sample_names": [
+            "Internal Audit",
+            "Website Migration",
+            "Data Migration",
+            "Mobile App",
+            "SANDBOX"
+          ]
+        }
+      }
+    }
+  },
+  "project_name_to_id": {
+    "Internal Audit": 7,
+    "Website Migration": 6,
+    "Data Migration": 5,
+    "Mobile App": 4,
+    "SANDBOX": 3,
+    "Scrum project": 2,
+    "Demo project": 1
+  }
+}

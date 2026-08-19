@@ -1,0 +1,167 @@
+{
+  "total_results": 45,
+  "number_of_results_in_the_page": 20,
+  "items": [
+    {
+      "entity": "WorkPackage",
+      "id": 101,
+      "subject": "Backend task number 1",
+      "status": "New",
+      "type": "Task",
+      "project": "Alpha"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 102,
+      "subject": "Backend task number 2",
+      "status": "New",
+      "type": "Task",
+      "project": "Beta"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 103,
+      "subject": "Backend task number 3",
+      "status": "New",
+      "type": "Task",
+      "project": "Cactus"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 104,
+      "subject": "Backend task number 4",
+      "status": "New",
+      "type": "Task",
+      "project": "Door"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 105,
+      "subject": "Backend task number 5",
+      "status": "New",
+      "type": "Task",
+      "project": "Elph"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 106,
+      "subject": "Backend task number 6",
+      "status": "New",
+      "type": "Task",
+      "project": "Firework"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 107,
+      "subject": "Backend task number 7",
+      "status": "New",
+      "type": "Task",
+      "project": "Giant"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 108,
+      "subject": "Backend task number 8",
+      "status": "New",
+      "type": "Task",
+      "project": "Hotel"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 109,
+      "subject": "Backend task number 9",
+      "status": "New",
+      "type": "Task",
+      "project": "Incident"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 110,
+      "subject": "Backend task number 10",
+      "status": "New",
+      "type": "Task",
+      "project": "Joker"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 111,
+      "subject": "Backend task number 11",
+      "status": "New",
+      "type": "Task",
+      "project": "Koala"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 112,
+      "subject": "Backend task number 12",
+      "status": "New",
+      "type": "Task",
+      "project": "Lobster"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 113,
+      "subject": "Backend task number 13",
+      "status": "New",
+      "type": "Task",
+      "project": "Management"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 114,
+      "subject": "Backend task number 14",
+      "status": "New",
+      "type": "Task",
+      "project": "Novel"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 115,
+      "subject": "Backend task number 15",
+      "status": "New",
+      "type": "Task",
+      "project": "Oracle"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 116,
+      "subject": "Backend task number 16",
+      "status": "New",
+      "type": "Task",
+      "project": "Power"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 117,
+      "subject": "Backend task number 17",
+      "status": "New",
+      "type": "Task",
+      "project": "Queue"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 118,
+      "subject": "Backend task number 18",
+      "status": "New",
+      "type": "Task",
+      "project": "Rider"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 119,
+      "subject": "Backend task number 19",
+      "status": "New",
+      "type": "Task",
+      "project": "Star"
+    },
+    {
+      "entity": "WorkPackage",
+      "id": 120,
+      "subject": "Backend task number 20",
+      "status": "New",
+      "type": "Task",
+      "project": "Tower"
+    }
+  ],
+  "pagination_warning": "Warning: there are more results available. Only the first 20 are displayed."
+}
