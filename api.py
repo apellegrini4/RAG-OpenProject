@@ -1,6 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Form
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import json
+import requests
 from structured_URL_generator import (
 parser, define_urlConstructor_chain, fetch_openproject_data,
     build_read_request, build_create_request, build_update_request, safe_write,
@@ -8,14 +11,45 @@ parser, define_urlConstructor_chain, fetch_openproject_data,
 )
 from debug import debug_log
 from response_generator import define_response_chain
-from json_pruning import PAGE_SIZE, clean_and_remodel_json, pagination_warning
+from json_pruning import PAGE_SIZE, clean_and_remodel_json, clean_created_resource, pagination_warning
 from permissions import (
     check_permission, permission_scope, project_of_work_package, refusal_answer, refusal_for,
 )
+from accounts import username_for_wallet, api_key_for, register_wallet
+from request_helpers import API_V3, commit_write
 
 import time
+import os
+import datetime
 
 app = FastAPI()
+
+#every /ask_dcl call is appended here exactly as answered
+DCL_LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dcl_test_log.jsonl")
+
+
+def _log_dcl_case(wallet, username, question, result):
+    try:
+        with open(DCL_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps({
+                "timestamp": datetime.datetime.now().isoformat(timespec="seconds"),
+                "wallet": wallet,
+                "username": username,
+                "question": question,
+                "result": result,
+            }) + "\n")
+    except OSError:
+        #logging must never be the reason a question fails
+        pass
+
+#local dev only: the Decentraland preview (dcl start) and uvicorn run on different localhost
+#ports, so the browser treats them as different origins and blocks the request without this.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class requestStructure(BaseModel):
     username: str
@@ -23,6 +57,14 @@ class requestStructure(BaseModel):
     model_name_phase1: str
     model_name_phase2: str
     api_key: str
+
+
+class dclRequestStructure(BaseModel):
+    """what the Decentraland scene sends: a wallet, never a credential """
+    wallet: str
+    question: str
+    model_name_phase1: str = "qwen2.5-coder:1.5b"
+    model_name_phase2: str = "gemma3:4b"
 
 
 def intent_identifier(json_data, api_key):
@@ -144,25 +186,32 @@ def execute(json_data, username, api_key):
     return safe_write(request, api_key)
 
 
-@app.post("/ask")
-async def ask_agent(request: requestStructure):
+async def run_ask(username, api_key, question, model_name_phase1, model_name_phase2):
+    """the whole pipeline for one question, once the caller has already resolved a username and an api_key"""
     start_time = time.perf_counter()
     t_phase1 = t_openproject = t_phase2 = None
 
     try:
         #creation of the chains for the 2 models
-        url_constructur_chain = define_urlConstructor_chain(request.model_name_phase1)
-        response_chain = define_response_chain(request.model_name_phase2)
+        url_constructur_chain = define_urlConstructor_chain(model_name_phase1)
+        response_chain = define_response_chain(model_name_phase2)
 
         mark = time.perf_counter()
         json_params = url_constructur_chain.invoke({"format_instructions": parser.get_format_instructions(),
-                                    "user_query": request.question})
+                                    "user_query": question})
         t_phase1 = round(time.perf_counter() - mark, 2)
         debug_log("json_params (Fase 1)", json_params)
 
-        #the identity travels as a Python argument, never inside the prompt of phase 1
         mark = time.perf_counter()
-        final_data = execute(json_params, request.username, request.api_key)
+        final_data = execute(json_params, username, api_key)
+
+
+        if isinstance(final_data, dict) and final_data.get('ready_to_commit'):
+            final_data = commit_write(final_data, api_key)
+
+            if isinstance(final_data, dict):
+                final_data = clean_created_resource(final_data)
+
         t_openproject = round(time.perf_counter() - mark, 2)
         debug_log("final_data (execute)", final_data)
 
@@ -172,7 +221,7 @@ async def ask_agent(request: requestStructure):
         refusal = refusal_answer(final_data)
         if refusal is not None:
             return {
-                "model_choosen_phase1": request.model_name_phase1,
+                "model_choosen_phase1": model_name_phase1,
                 "model_choosen_phase2": None,   #not invoked: the refusal is not generated
                 "execution_time": round(time.perf_counter() - start_time, 2),
                 "timings": {"phase1": t_phase1, "openproject": t_openproject, "phase2": None},
@@ -185,7 +234,7 @@ async def ask_agent(request: requestStructure):
 
         mark = time.perf_counter()
         response = response_chain.invoke({'json' : json_data,
-          'user_query' : request.question
+          'user_query' : question
         })
         t_phase2 = round(time.perf_counter() - mark, 2)
 
@@ -197,8 +246,8 @@ async def ask_agent(request: requestStructure):
         execution_time = round(time.perf_counter() - start_time, 2) #whole request, end to end
 
         return {
-            "model_choosen_phase1": request.model_name_phase1,
-            "model_choosen_phase2": request.model_name_phase2,
+            "model_choosen_phase1": model_name_phase1,
+            "model_choosen_phase2": model_name_phase2,
             "execution_time": execution_time,
             "timings": {"phase1": t_phase1, "openproject": t_openproject, "phase2": t_phase2},
             "answer": response
@@ -206,3 +255,87 @@ async def ask_agent(request: requestStructure):
 
     except Exception as e:
         return f"System Info: the request could not be completed, error: {e}"
+
+
+@app.post("/ask")
+async def ask_agent(request: requestStructure):
+    return await run_ask(request.username, request.api_key, request.question,
+                          request.model_name_phase1, request.model_name_phase2)
+
+
+@app.post("/ask_dcl")
+async def ask_agent_dcl(request: dclRequestStructure):
+    """what the Decentraland scene calls: only a wallet, never a credential. The middleware
+    resolves the account itself with accounts.py. If the wallet is unknown, or the account has
+    no key configured, the refusal is decided here and OpenProject is never contacted """
+    username = username_for_wallet(request.wallet)
+    if username is None:
+        result = {
+            "model_choosen_phase1": None,
+            "model_choosen_phase2": None,
+            "execution_time": 0,
+            "timings": {"phase1": None, "openproject": None, "phase2": None},
+            "answer": ("System Info: this wallet is not linked to any OpenProject account yet. "
+                       "Open http://localhost:8000/link_wallet in a browser to link it."),
+        }
+        _log_dcl_case(request.wallet, None, request.question, result)
+        return result
+
+    api_key = api_key_for(username)
+    if api_key is None:
+        result = {
+            "model_choosen_phase1": None,
+            "model_choosen_phase2": None,
+            "execution_time": 0,
+            "timings": {"phase1": None, "openproject": None, "phase2": None},
+            "answer": f"System Info: no API credential configured for '{username}'.",
+        }
+        _log_dcl_case(request.wallet, username, request.question, result)
+        return result
+
+    result = await run_ask(username, api_key, request.question,
+                            request.model_name_phase1, request.model_name_phase2)
+    _log_dcl_case(request.wallet, username, request.question, result)
+    return result
+
+
+LINK_FORM_HTML = """<!doctype html><html><body style="font-family:sans-serif;max-width:32rem;margin:3rem auto">
+<h3>Link your wallet to OpenProject</h3>
+<p>1. In OpenProject, go to your avatar &rarr; <b>My account</b> &rarr; <b>Access tokens</b> &rarr;
+generate an API key (shown once, copy it now).<br>
+2. Paste it below together with your Decentraland wallet address.</p>
+<form method="post" action="/link_wallet">
+  <p>Wallet: <input name="wallet" value="{wallet}" style="width:28rem" required></p>
+  <p>OpenProject API key: <input name="op_api_key" type="password" style="width:28rem" required></p>
+  <button type="submit">Link</button>
+</form>
+<p style="color:#666;font-size:0.85em">The key is stored server-side only, never sent back to the
+browser or to Decentraland.</p>
+</body></html>"""
+
+
+@app.get("/link_wallet", response_class=HTMLResponse)
+async def link_wallet_form(wallet: str = ""):
+    """ human-facing self-registration page. The bot's refusal message points here; the wallet
+    query param lets it come pre-filled so the player only has to paste the API key """
+    return LINK_FORM_HTML.format(wallet=wallet)
+
+
+@app.post("/link_wallet")
+async def link_wallet(wallet: str = Form(...), op_api_key: str = Form(...)):
+    """ resolves the caller's own identity from OpenProject (GET /users/me, called once here at
+    link time) and persists the wallet -> account mapping. This is the only place in the system a raw API key ever arrives
+    from outside the server """
+    try:
+        response = requests.get(API_V3 + "users/me", auth=("apikey", op_api_key), timeout=15)
+    except requests.RequestException:
+        return {"linked": False, "error": "could not reach OpenProject"}
+
+    if response.status_code == 401:
+        return {"linked": False, "error": "invalid API key"}
+    if not response.ok:
+        return {"linked": False, "error": f"OpenProject error {response.status_code}"}
+
+    me = response.json()
+    username = register_wallet(wallet, me["id"], me.get("login") or me.get("name"), op_api_key)
+    return {"linked": True, "username": username, "op_user_id": me["id"], "op_login": me.get("login")}

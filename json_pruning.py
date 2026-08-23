@@ -15,6 +15,44 @@ def pagination_warning(data):
     return None
 
 
+#fields kept from a single Project or WorkPackage element
+project_categories = ['active', 'public']
+workpackage_categories = ['startDate', 'dueDate', 'percentageDone']
+useful_links = ['type', 'status', 'priority', 'project', 'author', 'assignee', 'version']
+
+
+def _reduce_item(item):
+    reduced_item = {}
+
+    reduced_item['entity'] = item.get('_type')
+    reduced_item['id'] = item.get('id')
+
+    #check to see if it's a project or a workpackage
+    is_project = reduced_item['entity'] == 'Project'
+    if is_project:
+        reduced_item['name'] = item.get('name')
+    else:
+        reduced_item['subject'] = item.get('subject')
+
+    description = item.get('description')
+    if description and description.get('raw'):
+        reduced_item['description'] = description['raw']
+
+    for cat in (project_categories if is_project else workpackage_categories):
+        if item.get(cat) is not None:
+            reduced_item[cat] = item[cat]
+
+    links = item.get('_links', {}) or {}
+
+    for l in useful_links:
+        link = links.get(l)
+        title = link.get('title') if link else None
+        if title:
+            reduced_item[l] = title
+
+    return reduced_item
+
+
 def clean_and_remodel_json(data):
     #check to see if there was an error or not
     if isinstance(data, str):
@@ -26,41 +64,24 @@ def clean_and_remodel_json(data):
         'items': []
     }
 
-    project_categories = ['active', 'public']
-    workpackage_categories = ['startDate', 'dueDate', 'percentageDone']
-
-    useful_links = ['type', 'status', 'priority', 'project', 'author', 'assignee', 'version']
     all_elements = data.get('_embedded', {}).get('elements', [])
 
     for item in all_elements:
-        reduced_item = {}
-  
-        reduced_item['entity'] = item.get('_type')
-        reduced_item['id'] = item.get('id')
-
-        #check to see if it's a project or a workpackage
-        is_project = reduced_item['entity'] == 'Project'
-        if is_project:
-            reduced_item['name'] = item.get('name')
-        else:
-            reduced_item['subject'] = item.get('subject')
-
-        description = item.get('description')
-        if description and description.get('raw'):
-            reduced_item['description'] = description['raw']
-
-        for cat in (project_categories if is_project else workpackage_categories):
-            if item.get(cat) is not None:
-                reduced_item[cat] = item[cat]
-
-        links = item.get('_links', {})
-
-        for l in useful_links:
-            if l in links:
-                title = links[l].get('title')
-                if title:
-                    reduced_item[l] = title
-
-        refined_json['items'].append(reduced_item) #appends the item containg only important info to the final json
+        #appends the item containg only important info to the final json
+        refined_json['items'].append(_reduce_item(item))
 
     return refined_json
+
+
+def clean_created_resource(data):
+    """ same output shape as clean_and_remodel_json(), for the single resource commit_write()
+    returns after a real create/update, not a list response, so it has no '_embedded.elements'
+    and clean_and_remodel_json() would see it as an empty page """
+    if isinstance(data, str):
+        return {"error_message": data}
+
+    return {
+        'total_results': 1,
+        'number_of_results_in_the_page': 1,
+        'items': [_reduce_item(data)],
+    }

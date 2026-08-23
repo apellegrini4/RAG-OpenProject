@@ -120,3 +120,4 @@ sentence-transformers
 pandas
 matplotlib
 pytest
+python-multipart

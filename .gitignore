@@ -4,7 +4,9 @@ __pycache__/
 .venv/
 venv/
 .env
+accounts_store.json
 _temp/
+dcl_test_log.jsonl
 benchmark/runs/*
 !benchmark/runs/.gitkeep
 *.gguf
