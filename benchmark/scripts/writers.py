@@ -71,8 +71,8 @@ def write_manifest(run_dir, manifest: dict):
     path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-def write_summary_csv(run_dir, rows: list):
-    path = Path(run_dir) / "summary.csv"
+def write_summary_csv(run_dir, rows: list, filename: str = "summary.csv"):
+    path = Path(run_dir) / filename
     if not rows:
         path.write_text("", encoding="utf-8")
         return
