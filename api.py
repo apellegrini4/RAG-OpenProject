@@ -14,6 +14,7 @@ from response_generator import define_response_chain
 from json_pruning import PAGE_SIZE, clean_and_remodel_json, clean_created_resource, pagination_warning
 from permissions import (
     check_permission, permission_scope, project_of_work_package, refusal_answer, refusal_for,
+    invalidate_capabilities_for_username,
 )
 from accounts import username_for_wallet, api_key_for, register_wallet
 from request_helpers import API_V3, commit_write
@@ -65,6 +66,13 @@ class dclRequestStructure(BaseModel):
     question: str
     model_name_phase1: str = "qwen2.5-coder:1.5b"
     model_name_phase2: str = "gemma3:4b"
+
+
+class dclLinkRequest(BaseModel):
+    """what the Decentraland scene sends when the player activates their account from inside the
+    scene: the wallet detected by the client plus the OpenProject API key typed in the panel """
+    wallet: str
+    api_key: str
 
 
 def intent_identifier(json_data, api_key):
@@ -210,6 +218,8 @@ async def run_ask(username, api_key, question, model_name_phase1, model_name_pha
             final_data = commit_write(final_data, api_key)
 
             if isinstance(final_data, dict):
+                #a write can change what this user is allowed to do next
+                invalidate_capabilities_for_username(username)
                 final_data = clean_created_resource(final_data)
 
         t_openproject = round(time.perf_counter() - mark, 2)
@@ -225,6 +235,7 @@ async def run_ask(username, api_key, question, model_name_phase1, model_name_pha
                 "model_choosen_phase2": None,   #not invoked: the refusal is not generated
                 "execution_time": round(time.perf_counter() - start_time, 2),
                 "timings": {"phase1": t_phase1, "openproject": t_openproject, "phase2": None},
+                "phase1_extraction": json_params,
                 "answer": refusal,
             }
 
@@ -250,6 +261,7 @@ async def run_ask(username, api_key, question, model_name_phase1, model_name_pha
             "model_choosen_phase2": model_name_phase2,
             "execution_time": execution_time,
             "timings": {"phase1": t_phase1, "openproject": t_openproject, "phase2": t_phase2},
+            "phase1_extraction": json_params,
             "answer": response
         }
 
@@ -276,7 +288,7 @@ async def ask_agent_dcl(request: dclRequestStructure):
             "execution_time": 0,
             "timings": {"phase1": None, "openproject": None, "phase2": None},
             "answer": ("System Info: this wallet is not linked to any OpenProject account yet. "
-                       "Open http://localhost:8000/link_wallet in a browser to link it."),
+                       "Paste your OpenProject API key here to activate your account."),
         }
         _log_dcl_case(request.wallet, None, request.question, result)
         return result
@@ -321,11 +333,11 @@ async def link_wallet_form(wallet: str = ""):
     return LINK_FORM_HTML.format(wallet=wallet)
 
 
-@app.post("/link_wallet")
-async def link_wallet(wallet: str = Form(...), op_api_key: str = Form(...)):
+def _link_wallet_to_openproject(wallet, op_api_key):
     """ resolves the caller's own identity from OpenProject (GET /users/me, called once here at
     link time) and persists the wallet -> account mapping. This is the only place in the system a raw API key ever arrives
-    from outside the server """
+    from outside the server. Shared by the browser form (/link_wallet) and by the in-scene
+    activation (/link_dcl) """
     try:
         response = requests.get(API_V3 + "users/me", auth=("apikey", op_api_key), timeout=15)
     except requests.RequestException:
@@ -339,3 +351,39 @@ async def link_wallet(wallet: str = Form(...), op_api_key: str = Form(...)):
     me = response.json()
     username = register_wallet(wallet, me["id"], me.get("login") or me.get("name"), op_api_key)
     return {"linked": True, "username": username, "op_user_id": me["id"], "op_login": me.get("login")}
+
+
+@app.post("/link_wallet")
+async def link_wallet(wallet: str = Form(...), op_api_key: str = Form(...)):
+    """ browser form handler, kept as the manual/emergency path """
+    return _link_wallet_to_openproject(wallet, op_api_key)
+
+
+@app.get("/wallet_status")
+async def wallet_status(wallet: str = ""):
+    """ asked by the scene the moment the player opens the assistant panel: it decides whether the
+    panel starts in 'paste your API key' mode or in normal question mode. No credential involved """
+    username = username_for_wallet(wallet)
+    return {"linked": username is not None, "username": username}
+
+
+@app.post("/link_dcl")
+async def link_dcl(request: dclLinkRequest):
+    """ same registration as the browser form, but called from inside Decentraland: the wallet is
+    detected by the client, the key is typed in the assistant panel. The key is stored server-side
+    only, and the answer field is what the NPC shows in its panel """
+    wallet = (request.wallet or "").strip()
+    api_key = (request.api_key or "").strip()
+    if not wallet:
+        return {"linked": False, "answer": "System Info: no wallet detected, the account cannot be activated."}
+    if not api_key:
+        return {"linked": False, "answer": "System Info: paste your OpenProject API key to activate your account."}
+
+    result = _link_wallet_to_openproject(wallet, api_key)
+    if result.get("linked"):
+        result["answer"] = (f"Account activated: this wallet is now linked to '{result['username']}'. "
+                            "Ask me anything about your projects and work packages.")
+    else:
+        result["answer"] = (f"System Info: could not activate the account ({result.get('error')}). "
+                            "Check the API key and try again.")
+    return result

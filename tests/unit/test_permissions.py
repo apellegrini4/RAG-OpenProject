@@ -190,12 +190,13 @@ from permissions import permission_scope, project_of_work_package
 
 
 @pytest.mark.parametrize("extraction,expected_id,expected_label", [
-    #read of work packages inside a project: the project is a filter
+    #read of work packages inside a project: the project is a filter. Without an api_key the id
+    #cannot be resolved, the name is kept for the message
     ({"intent": "read", "macro_section": "work_packages",
-      "filters": {"project": ["Mobile App"]}, "payload": {}}, 4, "Mobile App"),
+      "filters": {"project": ["Mobile App"]}, "payload": {}}, None, "Mobile App"),
     #create of a work package: the project is in the payload
     ({"intent": "create", "macro_section": "work_packages",
-      "filters": {}, "payload": {"subject": ["x"], "project": ["SANDBOX"]}}, 3, "SANDBOX"),
+      "filters": {}, "payload": {"subject": ["x"], "project": ["SANDBOX"]}}, None, "SANDBOX"),
     #on an update the filters hold the id of the target, not of a project, so only the verb is checked
     ({"intent": "update", "macro_section": "work_packages",
       "filters": {"id": ["41"]}, "payload": {"status": ["Closed"]}}, None, None),
@@ -210,13 +211,14 @@ from permissions import permission_scope, project_of_work_package
       "filters": {"id": ["12"]}, "payload": {"active": ["f"]}}, "12", None),
     #updating a project selected by name
     ({"intent": "update", "macro_section": "projects",
-      "filters": {"name": ["Data Migration"]}, "payload": {"active": ["f"]}}, 5, "Data Migration"),
-    #a project nobody has ever heard of: unresolved, but the name is kept for the message
+      "filters": {"name": ["Data Migration"]}, "payload": {"active": ["f"]}}, None, "Data Migration"),
+    #a project nobody has ever heard of: unresolved too, and indistinguishable from the ones above
     ({"intent": "read", "macro_section": "work_packages",
       "filters": {"project": ["Zephyr"]}, "payload": {}}, None, "Zephyr"),
 ])
 def test_permission_scope(extraction, expected_id, expected_label):
-    project_id, label = permission_scope(extraction)      # no api_key: no network in unit tests
+    #no api_key: no network in unit tests, so no name can be resolved to an id here
+    project_id, label = permission_scope(extraction)
     assert project_id == expected_id
     assert label == expected_label
 
@@ -226,7 +228,7 @@ def test_permission_scope_unwraps_properties():
     project_id, label = permission_scope({"properties": {
         "intent": "read", "macro_section": "work_packages",
         "filters": {"project": ["Internal Audit"]}, "payload": {}}})
-    assert project_id == 7 and label == "Internal Audit"
+    assert project_id is None and label == "Internal Audit"
 
 
 def test_project_of_work_package():

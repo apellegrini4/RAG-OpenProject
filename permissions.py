@@ -6,10 +6,11 @@ is the pure logic and is what the unit tests exercise, check_permission() fetche
 """
 
 import json
+import time
 
 import requests
 
-from accounts import get_account, api_key_for, project_id_for
+from accounts import get_account, api_key_for
 from request_helpers import API_V3, LookupFailed, create_ID_map
 from structural_validation import normalize_value
 
@@ -37,13 +38,29 @@ VERIFICATION_FAILED = "could not reach OpenProject to verify permissions"
 #how many capabilities we accept in one page
 CAPABILITIES_PAGE_SIZE = 1000
 
-#capabilities are stable for the length of a run
+#capabilities change while the system is running 
+CAPABILITIES_TTL_SECONDS = 60
 _CAPABILITIES_CACHE = {}
 
 
 def clear_capabilities_cache():
     """tests and the manual scripts call this to force a fresh read from OpenProject"""
     _CAPABILITIES_CACHE.clear()
+
+
+def invalidate_capabilities(op_user_id=None):
+    """drop the cached capabilities of one user, or of everybody"""
+    if op_user_id is None:
+        _CAPABILITIES_CACHE.clear()
+    else:
+        _CAPABILITIES_CACHE.pop(op_user_id, None)
+
+
+def invalidate_capabilities_for_username(username):
+    """same, from the identity label the rest of the system uses"""
+    account = get_account(username)
+    if account:
+        invalidate_capabilities(account.get("op_user_id"))
 
 
 def context_key(href):
@@ -72,7 +89,10 @@ def action_name(element):
 def fetch_capabilities(op_user_id, api_key, use_cache=True):
     """ {context: set(actions)} for one user, asked with that user own key """
     if use_cache and op_user_id in _CAPABILITIES_CACHE:
-        return _CAPABILITIES_CACHE[op_user_id]
+        cached_at, cached = _CAPABILITIES_CACHE[op_user_id]
+        if time.time() - cached_at < CAPABILITIES_TTL_SECONDS:
+            return cached
+        del _CAPABILITIES_CACHE[op_user_id]
 
     filters = json.dumps([{"principal": {"operator": "=", "values": [str(op_user_id)]}}])
     try:
@@ -103,7 +123,7 @@ def fetch_capabilities(op_user_id, api_key, use_cache=True):
             capabilities.setdefault(context, set()).add(action)
 
     if use_cache:
-        _CAPABILITIES_CACHE[op_user_id] = capabilities
+        _CAPABILITIES_CACHE[op_user_id] = (time.time(), capabilities)
     return capabilities
 
 
@@ -127,6 +147,11 @@ def decide_permission(capabilities, username, intent, macro_section, project=Non
         if action in capabilities.get(GLOBAL_CONTEXT, set()):
             return True, None
         return False, f"user '{username}' is not allowed to create projects on this instance"
+
+    #a project was named but the caller own key cannot see it: it does not exist for them.
+    #Only for work packages: on projects, a name is a search fragment, not an exact project
+    if project is None and project_name is not None and macro_section == "work_packages":
+        return False, f"user '{username}' has no access to {label}"
 
     #no project to check
     if project is None:
@@ -174,22 +199,17 @@ def check_permission(username, intent, macro_section, project=None, project_name
 
 #which project is this request about
 def resolve_project_id(project_name, api_key=None):
-    """ project name to numeric id """
-    if project_name is None:
+    """ project name to numeric id, asked to the instance with the caller own key. None when the
+    caller cannot see a project by that name """
+    if project_name is None or not api_key:
         return None
 
-    project_id = project_id_for(project_name)
-    if project_id is not None:
-        return project_id
+    try:
+        id_map = create_ID_map('project', api_key)
+    except LookupFailed:
+        return None
 
-    if api_key:
-        try:
-            id_map = create_ID_map('project', api_key)
-        except LookupFailed:
-            #we could not resolve the name
-            return None
-        return id_map.get(normalize_value(project_name))
-    return None
+    return id_map.get(normalize_value(project_name))
 
 
 def permission_scope(json_data, api_key=None):

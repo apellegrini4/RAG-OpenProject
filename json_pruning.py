@@ -1,5 +1,4 @@
-#how many results a read asks for. Lowered from 7 to 5 after a pilot run, 
-# on lists of six or seven items the answering model started dropping the last ones
+#how many results a read asks for
 PAGE_SIZE = 5
 
 
@@ -11,7 +10,7 @@ def pagination_warning(data):
 
     total = data['total_results']
     if total > PAGE_SIZE:
-        return f"I found {total} results, these are the {PAGE_SIZE} most recently created."
+        return f"I found {total} final results, these are the {PAGE_SIZE} most recent ones."
     return None
 
 

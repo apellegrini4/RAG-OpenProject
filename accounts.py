@@ -51,7 +51,7 @@ ACCOUNTS = {
     "alba.pellegrini": {
         "op_user_id": 4,
         "op_login": "albapellegrini04+1@gmail.com",
-        #"wallet": "0x37aee916c3817c1e7b91695ac218914f96fe132a",
+        #"wallet": "None",
         "key_env": ("OP_API_KEY_ALBA", "OP_API_KEY"),
     },
     "giulia.bianchi": {
@@ -67,18 +67,6 @@ ACCOUNTS = {
         "key_env": ("OP_API_KEY_MARIO",),
     },
 }
-
-#the projects of the instance, resolved once, this is a shortcut for tests and for readable messages, not a replacement
-PROJECT_IDS = {
-    "demo project": 1,
-    "scrum project": 2,
-    "sandbox": 3,
-    "mobile app": 4,
-    "data migration": 5,
-    "website migration": 6,
-    "internal audit": 7,
-}
-
 
 def get_account(username):
     """the account row for an identity label, or None if the label is unknown. Checks the static
@@ -125,8 +113,3 @@ def username_for_wallet(wallet):
     return None
 
 
-def project_id_for(project_name):
-    """project name -> numeric id, case-insensitive. None if unknown to this table """
-    if project_name is None:
-        return None
-    return PROJECT_IDS.get(str(project_name).strip().lower())

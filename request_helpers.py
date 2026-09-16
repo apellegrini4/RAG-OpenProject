@@ -86,7 +86,9 @@ def build_get_ID_request(name):
         base_url += 'priorities'
 
     elif name == 'author' or name == 'assignee':
-        base_url += 'users'
+        #principals, not users: /users is limited to administrators, while /principals returns the
+        #people who are members of the projects the caller can see, which is the right scope anyway
+        base_url += 'principals?pageSize=200'
 
     elif name == 'status':
         base_url += 'statuses'
