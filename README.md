@@ -5,15 +5,16 @@ middleware. Inside the scene, an NPC (the assistant) receives natural-language q
 them into structured requests to OpenProject using language models running locally with
 **Ollama**, and returns the answer in the NPC's speech bubble.
 
-The system is made of two parts that need to be running together, on the same machine:
+The system has two parts, normally run together on the same machine:
 
-1. **Middleware** (this folder) — a Python FastAPI server that talks to OpenProject and to
-   Ollama.
-2. **Decentraland scene** — a separate Node/TypeScript project, containing the NPC and the
-   interface used to interact with it.
+1. **Middleware** (this folder) — a Python FastAPI server that talks to OpenProject and to Ollama.
+2. **Decentraland scene** — a separate Node/TypeScript project (`decenetraland-scene`), containing
+   the NPC and the panel used to interact with it. It lives in its own Git repository, outside
+   this folder.
 
-Everything runs locally: no data leaves the machine where the middleware and Ollama are running,
-except for the direct calls to the configured OpenProject instance.
+Everything runs locally: no data leaves the machine running the middleware and Ollama, except for
+the direct calls to the configured OpenProject instance (and, if you expose the middleware
+publicly, see [Section 6](#6-exposing-the-middleware-publicly-ngrok)).
 
 ---
 
@@ -21,34 +22,32 @@ except for the direct calls to the configured OpenProject instance.
 
 | Component | Version | Notes |
 |---|---|---|
-| Python | 3.10 or 3.11 | for the middleware |
+| Python | 3.11 | for the middleware |
 | Node.js | ≥ 16 (a recent LTS is recommended) | for the Decentraland scene |
 | npm | ≥ 6 | bundled with Node.js |
 | Ollama | installed and running | to run the models locally — [ollama.com](https://ollama.com) |
-| OpenProject access | instance URL + a personal API key | see the Configuration section |
+| OpenProject access | instance URL + a personal API key | see [Configuration](#3-configuration) |
 
 ### Required Ollama models
 
-The system uses two models across two distinct phases: one to extract the parameters of the
-question (Phase 1), and one to write the final natural-language answer (Phase 2). These are the
-only two models required, and they need to be downloaded before the first run:
+The system uses two models across two phases: one to extract the parameters of the question
+(Phase 1), one to write the final natural-language answer (Phase 2). Download both before the
+first run:
 
 ```bash
 ollama pull qwen2.5-coder:1.5b
 ollama pull gemma3:4b
 ```
 
-Check that they were downloaded correctly with:
-
-```bash
-ollama list
-```
+Check they downloaded correctly with `ollama list`. (Other model names can be passed per-request
+via the API — see [Section 5](#5-api-endpoints) — but these two are the defaults the Decentraland
+scene uses and the only ones required for a normal run.)
 
 ---
 
 ## 2. Installing the middleware
 
-From the project folder:
+From this folder:
 
 ```bash
 python -m venv .venv
@@ -57,154 +56,175 @@ python -m venv .venv
 # macOS/Linux
 source .venv/bin/activate
 
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
+
+> On Windows, if `pip.exe` gets blocked by an application-control policy, use
+> `python -m pip install ...` as above instead of calling `pip.exe` directly.
 
 ---
 
 ## 3. Configuration
 
-Create a `.env` file in the project root (it is git-ignored, so it must be created manually on
-each machine) with the OpenProject instance URL and your API key:
+Create a `.env` file in this folder (git-ignored, must be created manually on each machine):
 
 ```
 OP_URL=https://<your-domain>.openproject.com/
 OP_API_KEY=<personal api key>
 ```
 
-The API key is generated from OpenProject: avatar in the top right → **My account** → **Access
-tokens** → generate a new API key (it is shown only once, copy it right away).
+Generate the API key in OpenProject: avatar (top right) → **My account** → **Access tokens** →
+generate a new key (shown once — copy it immediately).
 
-The `.env` file needs to be adapted case by case, depending on the OpenProject instance and the
-account being used: it is the only file that necessarily has to be changed to run the system on a
-machine other than mine.
-
-Linking your Decentraland wallet to your OpenProject account does not require changing any
-configuration file: it is done directly from inside Decentraland, the first time the assistant is
-used (see section 5.3).
+`.env` is the only file that necessarily needs to change to run the system on a different machine
+or with a different OpenProject instance/account. Linking a Decentraland wallet to an OpenProject
+account is a separate, self-service step done from inside the scene (see
+[Section 4.3](#43-linking-an-openproject-account-once-per-person)) — it does not touch `.env`.
 
 ---
 
-## 4. Starting the middleware (API)
+## 4. Running the system
 
-From the project root, with the virtual environment active:
+### 4.1 Start the middleware (API)
+
+Ollama must already be running (it usually starts on its own after installation; otherwise
+`ollama serve`). Then, from this folder with the virtual environment active:
 
 ```bash
 uvicorn api:app --reload
 ```
 
-The server starts on `http://127.0.0.1:8000`. To check that it is running, open
-`http://127.0.0.1:8000/docs` in a browser: FastAPI's automatic documentation should appear.
+The server starts on `http://127.0.0.1:8000`. Check it's up by opening
+`http://127.0.0.1:8000/docs` (FastAPI's automatic docs UI).
 
-Ollama must already be running in the background before starting the API (it usually starts on
-its own after installation; otherwise start it with `ollama serve`).
+### 4.2 Start the Decentraland scene
 
----
-
-## 5. Starting the Decentraland scene
-
-### 5.1 Installation (first time only)
+First time only, from the scene folder:
 
 ```bash
-cd ScenaDC/decenetraland-scene
 npm install
 ```
 
-### 5.2 Starting the preview
-
-With the middleware already running (step 4), from the scene folder:
+Then, with the middleware already running:
 
 ```bash
 npm start
 ```
 
-The command automatically opens a browser window with the scene preview. Walking around the
-scene, the assistant is the clickable NPC: clicking it opens the dialogue panel at the bottom.
+This opens a browser preview of the scene. The assistant is the clickable NPC; clicking it opens
+the dialogue panel.
 
-### 5.3 Linking your OpenProject account (once, per person)
+### 4.3 Linking an OpenProject account (once per person)
 
-The assistant panel identifies the user from the Decentraland wallet (in local preview, a session
-identifier). The first time it is used, if the wallet is not yet linked to any OpenProject
-account, the reply says so and an **"Open link page"** button appears: clicking it opens a page in
-the system browser where you paste your OpenProject API key (generated as described in the
-Configuration section). From that point on, questions asked from that wallet will run with the
-permissions of that OpenProject account.
-
-The pasted key stays server-side only and never returns to the browser or to the scene.
+The assistant identifies the user by Decentraland wallet. The first time a wallet is used, if it
+isn't linked yet, the reply says so and an **"Open link page"** button appears — it opens a page
+where the player pastes their OpenProject API key (see [Section 3](#3-configuration)). From then
+on, questions from that wallet run with that account's OpenProject permissions. The key is stored
+server-side only and never returns to the browser or the scene.
 
 ---
 
-## 6. Usage
+## 5. API endpoints
 
-1. Start Ollama (if not already running).
-2. Start the middleware (step 4).
-3. Start the scene (step 5.2).
-4. Click the assistant, link your account if prompted (step 5.3), type a question (e.g. *"which
-   tasks is Mario assigned in Mobile App?"*) and press **Ask**.
-
-Questions can be about reading projects and tasks, and — if the linked account has the right
-permissions on OpenProject — about creating or updating tasks and projects as well.
-
----
-
-## 7. Important limitation: the middleware only runs locally
-
-Inside the scene, the assistant contacts the middleware at `http://127.0.0.1:8000` (localhost),
-an address that always points to whichever machine is currently running the Decentraland client,
-not to a specific machine on the network. As a result, the assistant only responds if the
-middleware and Ollama are running on the same machine that is currently using Decentraland —
-whether in local preview or on the published version of the scene online.
-
-For the assistant to be usable from another machine, the installation described in this README
-needs to be repeated on that machine (Python, Node.js, Ollama with the two models, a `.env` file
-with your own OpenProject credentials), and the middleware and scene started there: at that point
-the system is self-contained on that machine and does not depend on any other.
+| Endpoint | Method | Used by | Purpose |
+|---|---|---|---|
+| `/ask` | POST | direct/manual calls | ask a question, passing `username`, `api_key`, `model_name_phase1`, `model_name_phase2` explicitly |
+| `/ask_dcl` | POST | the Decentraland scene | ask a question from a `wallet`; the middleware resolves the OpenProject account itself |
+| `/wallet_status` | GET | the scene | checks whether a wallet is already linked, before showing the question panel |
+| `/link_wallet` | GET/POST | browser (manual/emergency path) | HTML form to paste an API key and link a wallet |
+| `/link_dcl` | POST | the scene | same linking flow as `/link_wallet`, called from inside Decentraland |
 
 ---
 
-## 8. Project structure (quick reference)
+## 6. Exposing the middleware publicly (ngrok)
+
+A published (non-preview) Decentraland scene cannot reach `http://127.0.0.1:8000` — browser/client
+security blocks calls to `localhost` from a published World. Local preview (`npm start`) has no
+such restriction and always works with the local middleware.
+
+To make the middleware reachable from a published scene, the tested approach is an **ngrok
+tunnel**, run in a second terminal alongside `uvicorn`:
+
+```bash
+# terminal 1
+uvicorn api:app --reload
+
+# terminal 2
+ngrok http --domain=<your-static-domain>.ngrok-free.dev 8000
+```
+
+This requires the ngrok CLI (`winget install ngrok.ngrok` on Windows, or see
+[ngrok.com](https://ngrok.com)) authenticated once with `ngrok config add-authtoken <token>`, and
+a free static domain from the ngrok dashboard. Once the tunnel is up, update `MIDDLEWARE_URL` in
+the scene's `assistant.tsx` to the ngrok URL and redeploy the scene.
+
+Notes:
+- The machine running the tunnel must stay on and the tunnel active for the whole session — it's
+  not a permanent deployment, just exposure while you keep it running.
+- Ollama processes one request at a time, so concurrent questions from multiple players are
+  queued, not parallel.
+- The public URL is reachable by anyone who has it while the tunnel is active, not only players
+  inside the scene.
+- `run_public.py` / `pyngrok` (also present in this folder) was an earlier attempt at automating
+  this with a single Python command; it's superseded by the two-terminal approach above and can be
+  ignored.
+- On Windows, Defender or Smart App Control may flag/block the downloaded `ngrok.exe` (or
+  `torch/lib/shm.dll` during install) as an unrecognized binary — this is a common false positive.
+  Choose "Allow" on the Windows Security notification, or check **Windows Security → Virus &
+  threat protection → Protection history** if no prompt appeared.
+
+---
+
+## 7. Project structure (quick reference)
 
 ```
-Progetto/
-├── api.py                      # FastAPI — /ask, /ask_dcl, /link_wallet endpoints
-├── accounts.py                 # known users → OpenProject account and key
-├── permissions.py              # checks OpenProject permissions before every action
-├── structured_URL_generator.py # Phase 1 — extracts parameters from the question
+RAG-OpenProject/                # this folder — the middleware
+├── api.py                      # FastAPI app — see Section 5 for endpoints
+├── accounts.py                 # maps identities (seed accounts + self-linked wallets) to OpenProject accounts/keys
+├── accounts_store.json         # dynamic wallet → account links (git-ignored)
+├── permissions.py              # checks OpenProject permissions before every write action
+├── structured_URL_generator.py # Phase 1 — extracts parameters/filters from the question
 ├── response_generator.py       # Phase 2 — generates the natural-language answer
 ├── json_pruning.py             # trims OpenProject data before passing it to the model
 ├── request_helpers.py          # HTTP calls to OpenProject
-├── llm_builder.py              # builds the Ollama models
-├── benchmark/                  # evaluation tooling for the system (not needed for normal use)
+├── llm_builder.py               # builds the Ollama (ChatOllama) instances used by both phases
+├── benchmark/                  # evaluation tooling and datasets (not needed for normal use)
 ├── tests/                      # automated tests
-├── tools/                      # support scripts (e.g. resetting/preparing test data)
+├── tools/                      # support/maintenance scripts
 ├── requirements.txt
-└── .env                        # to be created, see the Configuration section
+└── .env                        # to be created — see Section 3
 
-ScenaDC/decenetraland-scene/
-├── scene.json                  # Decentraland scene configuration
-├── package.json                # npm scripts (start, build, deploy)
+decenetraland-scene/            # separate repository (not inside this folder), owned by a
+                                 # collaborator — always `git pull` before `npm run deploy` to
+                                 # avoid overwriting their changes
+├── scene.json
+├── package.json                # npm scripts: start, build, deploy
 └── src/
-    ├── assistant.tsx           # assistant NPC: UI, call to /ask_dcl, middleware address
+    ├── assistant.tsx           # assistant NPC: UI, calls to /ask_dcl and /wallet_status, MIDDLEWARE_URL
     └── ui.tsx                  # integrates the panel into the scene's UI tree
 ```
 
 ---
 
-## 9. Troubleshooting
+## 8. Troubleshooting
 
-**"could not reach the assistant" in the scene panel** — the middleware is not reachable from
-the machine currently running the Decentraland client. Check that `uvicorn` is running on that
-same machine and that `http://127.0.0.1:8000/docs` responds in the local browser.
+**"could not reach the assistant" in the scene panel** — in local preview, check `uvicorn` is
+running and `http://127.0.0.1:8000/docs` responds locally. On a published scene, check the ngrok
+tunnel is active and `MIDDLEWARE_URL` in `assistant.tsx` matches it (see Section 6).
 
 **"this wallet is not linked to any OpenProject account yet"** — expected the first time a wallet
-is used: use the "Open link page" button as described in step 5.3.
+is used; use the "Open link page" button (Section 4.3).
 
-**The model responds very slowly to the first question** — this is expected: the first call after
-starting Ollama loads the model into memory; subsequent questions are faster.
+**The model responds very slowly to the first question** — expected: the first call after
+starting Ollama loads the model into memory; later questions are faster.
 
-**Error when starting `npm start`** — check the Node.js version (`node -v`, must be ≥ 16) and
-rerun `npm install` in the scene folder.
+**Error on `npm start` / `npm install`** — check the Node.js version (`node -v`, ≥ 16) and rerun
+`npm install` in the scene folder.
 
-**Permission denied on an action that should be allowed** — permissions are read in real time from
-the connected OpenProject instance (not from a middleware configuration): check that the user
-actually has that permission on the project in question, within OpenProject itself.
+**Permission denied on an action that should be allowed** — permissions are read live from the
+connected OpenProject instance, not from a middleware setting: check the user's actual permissions
+on that project in OpenProject.
+
+**"Failed to load il2cpp" when opening the Decentraland desktop client** — usually Windows 11's
+Smart App Control blocking an unrecognized binary. Fix: Windows Security → App & browser control →
+Smart App Control → Off, then restart.
