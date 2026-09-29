@@ -204,27 +204,3 @@ decenetraland-scene/            # separate repository (not inside this folder), 
     └── ui.tsx                  # integrates the panel into the scene's UI tree
 ```
 
----
-
-## 8. Troubleshooting
-
-**"could not reach the assistant" in the scene panel** — in local preview, check `uvicorn` is
-running and `http://127.0.0.1:8000/docs` responds locally. On a published scene, check the ngrok
-tunnel is active and `MIDDLEWARE_URL` in `assistant.tsx` matches it (see Section 6).
-
-**"this wallet is not linked to any OpenProject account yet"** — expected the first time a wallet
-is used; use the "Open link page" button (Section 4.3).
-
-**The model responds very slowly to the first question** — expected: the first call after
-starting Ollama loads the model into memory; later questions are faster.
-
-**Error on `npm start` / `npm install`** — check the Node.js version (`node -v`, ≥ 16) and rerun
-`npm install` in the scene folder.
-
-**Permission denied on an action that should be allowed** — permissions are read live from the
-connected OpenProject instance, not from a middleware setting: check the user's actual permissions
-on that project in OpenProject.
-
-**"Failed to load il2cpp" when opening the Decentraland desktop client** — usually Windows 11's
-Smart App Control blocking an unrecognized binary. Fix: Windows Security → App & browser control →
-Smart App Control → Off, then restart.
